@@ -1,0 +1,38 @@
+### TeX ###
+## Core latex/pdflatex auxiliary files:
+*.swp
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.idx
+*.lof
+*.lot
+*.toc
+*.pdf
+*.pid
+*.fdb_latexmk
+*.fls
+*.ilg
+*.ind
+
+### Editor ###
+## Vim temp files:
+.*sw[op]
+
+## Related  Work files:
+related_work/
+related
+
+## Syncting files:
+*.synctex.*
+
+## Evaluation results
+raw/eval
+
+## Python intermediate files
+*.pyc
+
+## LibreOffice
+.~lock.*
