@@ -1,0 +1,22 @@
+\section*{Exercise B}
+\paragraph{1.}
+If we delete the the line \textbf{pred.next = curr} then we will have
+the following possible scenarios: (1) the thread is going through
+nodes that have been removed and thus, pred can point to a node
+already removed. (2) It possible for new nodes to be added before the
+current \textbf{pred.next} thus, the validation would not have the
+correct status.
+
+\paragraph{2}
+In the case of the Lazy algorithm, canceling the flag marked
+invalidates the validate() and contains() method that depend on this
+mark.
+
+\paragraph{3}
+No, we cannot modify the insert() method of the fine-grained
+synchronization list so that it locks only on node because we need to
+lock the previous node and the current node each time. During the
+insertion path the previous node will point to the new node and the
+new node will point to the current node. In the possibility of keeping
+only one lock in the current node then two threads might try to add a
+new node to the previous node which that is not correct. 
