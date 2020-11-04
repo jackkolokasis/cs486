@@ -2,82 +2,129 @@
 
 \begin{lstlisting}
 
+// Node structure
 struct Node {
-	int _key;
-	int _is_locked;
-	int _is_leaf;
-	struct Node *_l_child;
-	struct Node *_l_child;
-	struct Node *_l_threaded;
-	struct Node *_r_threaded;
-}
+	int _key;						// Node key
+	int _is_locked;					// Enbale if the node is locked
+	int _is_leaf;					// Enable if node is leaf
+	struct Node *_l_child;			// Left child
+	struct Node *_l_child;			// Right child
+	struct Node *_l_threaded;		// Left threaded
+	struct Node *_r_threaded;		// Right threaded
+};
 
+
+// Lock array
 struct Lock_Array {
 	struct Node* data;
+};
+
+
+Lock_Array[height]; // Height is define
+
+
+void BSTSearch(struct Node *root, int key)
+{
+	struct Node *tmp_ptr;		// Temporary ptr
+	struct Node *tmp_child;		// Child node
+
+	if (root != NULL)
+	{
+		lock(root)
+		struct Node *tmp_ptr = root
+	} else {
+		return;
+	}
+
+	while (tmp_ptr->is_leaf != 1 && tmp_ptr->key != key)
+	{
+		tmp_child = get_next(tmp_ptr, key); // Get next node
+
+		lock(tmp_child);
+		unlock(tmp_ptr);
+		tmp_ptr = tmp_child;
+	}
+
+	unlock(tmp_ptr);
 }
 
-stuct Node* get_next_node(stuct Node* tmp, int key)
+void BSTInsert(struct Node* root, int key)
 {
-	
+	struct Node *tmp_ptr;		// Temporary ptr
+	struct Node *tmp_child;		// Child node
+
+	lock(root)
+	tmp_ptr = root;
+	//lock_array[i++] = root.is_loc
+	lock_array[i++] = root
+
+	while (tmp_ptr.is_leaf != 1)
+	{
+		tmp_child = get_next(tmp_ptr, key); // Get next node
+
+		lock(tmp_child);
+		lock_array[i++] = tmp_child.is_locked;
+
+		tmp_ptr = child;
+		unlock(lock_array[i-2]);
+	}
+
+	Node tmp = new Node;
+
+	if (i = 1) // root leaf
+	{
+		tmp_ptr.l = tmp
+	}
+	else
+	{
+		tmp_child.l or r = tmp;
+	}
+
+	unlock(lock_array[i-1])
+}
+
+void BSTDelete(struct Node* root, int key)
+{
+	struct Node *tmp_ptr;		// Temporary ptr
+	struct Node *tmp_child;		// Child node
+
+	lock(root)
+	tmp_ptr = root;
+	//lock_array[i++] = root.is_loc
+	lock_array[i++] = root
+
+	while (tmp_ptr.is_leaf != 1)
+	{
+		tmp_child = get_next(tmp_ptr, key); // Get next node
+
+		lock(tmp_child);
+		lock_array[i++] = tmp_child.is_locked;
+
+		tmp_ptr = child;
+		unlock(lock_array[i-2]);
+	}
+
+	Node tmp = new Node;
+
+	if (i = 1) // root leaf
+	{
+		tmp_ptr.l = tmp
+	}
+	else
+	{
+		tmp_child.l or r = tmp;
+	}
+
+	unlock(lock_array[i-1])
 }
 
 \end{lstlisting}
-%
-%
-%
-%
-%struct Node {
-%	l, r,
-%	is_locked
-%	l_trhead
-%	r_thread
-%	is_leaf
-%}
-%
-%struct lock_array {
-%	struct Node *tmp;
-%}
-%
-%struct Node get_next(struct Node *tmp, int key)
-%{
-%
-%
-%	return tmp;
-%}
-%
-%lock_array[height];
-%i = 0;
-%
-%lock(root)
-%lock_array[i++] = root.is_locked
-%tmp_ptr = root
-%tmp_child;
-%
-%while (tmp_ptr.is_leaf != 1 )
-%{
-%	tmp_child = get_next(tmp_ptr, key);
-%
-%	lock(tmp_child);
-%	lock_array[i++] = tmp_child.is_locked;
-%
-%	tmp_ptr = child;
-%	unlock(lock_array[i-2]);
-%}
-%
-%Node tmp = new Node;
-%
-%if (i = 1) // root leaf
-%{
-%
-%	tmp_ptr.l = tmp
-%}
-%else
-%{
-%	tmp_child.l or r = tmp;
-%}
-%
-%unlock(lock_array[i-1])
-%
 
 \paragraph{2.}
 We implement a new 
+
+\paragraph{3.}
+
+\paragraph{4.}
+
+\paragraph{5.}
