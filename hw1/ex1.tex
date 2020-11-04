@@ -1,7 +1,7 @@
 \section*{Exercise A}
 
-\paragraph{a.}
-In the scenario that we have two processes in the critical section, 
+\paragraph{1a.}
+In the scenario that we have two processes in the critical section (CS), 
 the condition in line 4 must be true.
 
 For example: state[1] != group and state[2] != group
@@ -9,5 +9,24 @@ For example: state[1] != group and state[2] != group
 But the group changes when a process gets out from the critical
 section.
 
-\paragraph{b.}
+\paragraph{1b.}
+Yes, this scenario is possible as we show:
+We have two processes: P1 and P2. The P1 gets in the CS while the P2
+is waiting in line 7. At this point, P1 gets out from the CS and it
+changes the value of the group variable. Then, changes the state[i] =
+3 and is executed until line 4. Then, it gets again to the CS.
+However, P2 is still in waiting in line 7 because is much slower
+process than P1.
+
+\paragraph{1c.}
+If we remove lines 1,5 then we do not guarantee that a process has
+been enter to a group first and then will start to be executed.
+
+\paragraph{1d.}
+Line 4 is used to have fast access in the CS. If we remove line 4,
+then we will have performance penalty because all the processes will
+wait in line 7. Also, all the process will have to iterate all the
+process in the loop.
+
+\paragraph{2.}
 
