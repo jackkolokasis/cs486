@@ -1,130 +1,284 @@
 \section*{Exercise C}
 
-\begin{lstlisting}
+\begin{lstlisting}[style=mycode]
 
 // Node structure
 struct Node {
-	int _key;						// Node key
-	int _is_locked;					// Enbale if the node is locked
-	int _is_leaf;					// Enable if node is leaf
-	struct Node *_l_child;			// Left child
-	struct Node *_l_child;			// Right child
-	struct Node *_l_threaded;		// Left threaded
-	struct Node *_r_threaded;		// Right threaded
+	int _key;               // Node key
+	struct Node *left;      // Left child
+	struct Node *right;     // Right child
+	struct Node *l_thread;  // Left threaded
+	struct Node *r_thread;  // Right threaded
 };
 
+// Insert a Node in Binary Threaded Tree 
+struct Node *BSTInsert(struct Node *root, int ikey) 
+{ 
+    Node *ptr; 
+    Node *par = NULL;		// Parent node
+	Node *child = NULL;	// Child node
 
-// Lock array
-struct Lock_Array {
-	struct Node* data;
-};
+    // Searching for a Node with given value 
+	lock(root);
+	ptr = root
 
+    while (ptr != NULL) 
+    { 
+        // If key already exists, return 
+        if (ikey == (ptr->info)) 
+        { 
+			unlock(root);
+            return ptr; 
+        } 
+  
+        par = ptr;	// Update parent pointer 
+  
+        // Moving on left subtree. 
+        if (ikey < ptr->info) 
+        { 
+            if (ptr->l_thread == false) 
+				child = ptr->left
+				lock(child)
+                ptr = child
+            else
+                break; 
+        } 
+  
+        // Moving on right subtree. 
+        else
+        { 
+            if (ptr->r_thread == false) 
+				child = ptr->right;
+				lock(child);
+                ptr = child;
+            else
+                break; 
+        } 
 
-Lock_Array[height]; // Height is define
+		unlock(par);
+    } 
+  
+    // Create a new node 
+    Node *tmp = new Node; 
+    tmp->info = ikey; 
+    tmp->l_thread = true; 
+    tmp->r_thread = true; 
+  
+    if (par == NULL) 
+    { 
+        root = tmp; 
+        tmp->left = NULL; 
+        tmp->right = NULL; 
+		unlock (par);
+		return root;
+    } 
+    else if (ikey < (par->info)) 
+    { 
+        tmp->left = par->left; 
+        tmp->right = par; 
+        par->l_thread = false; 
+        par->left = tmp; 
+    } 
+    else
+    { 
+        tmp->left = par; 
+        tmp->right = par->right; 
+        par->r_thread = false; 
+        par->right = tmp; 
+    } 
 
+	unlock(par)
+	unlock(root)
+  
+    return root; 
+} 
 
-void BSTSearch(struct Node *root, int key)
-{
-	struct Node *tmp_ptr;		// Temporary ptr
-	struct Node *tmp_child;		// Child node
+// Insert a Node in Binary Threaded Tree 
+struct Node *BSTSearch(struct Node *root, int ikey) 
+{ 
+    Node *ptr; 
+    Node *par; 
+    Node *child; 
 
-	if (root != NULL)
+    // Searching for a Node with given value 
+	lock(root);
+	ptr = root
+
+    while (ptr != NULL) 
+    { 
+        // If key already exists, return 
+        if (ikey == (ptr->info)) 
+        { 
+			unlock(ptr);
+            return ptr; 
+        } 
+
+		par = ptr
+  
+        // Moving on left subtree. 
+        if (ikey < ptr->info) 
+        { 
+            if (ptr->l_thread == false) 
+				child = ptr->left
+				lock(child)
+                ptr = child
+            else
+                break; 
+        } 
+  
+        // Moving on right subtree. 
+        else
+        { 
+            if (ptr->r_thread == false) 
+				child = ptr->right;
+				lock(child);
+                ptr = child;
+            else
+                break; 
+        } 
+
+		unlock(par);
+    } 
+} 
+
+// Insert a Node in Binary Threaded Tree 
+struct Node *BSTSearch(struct Node *root, int ikey) 
+{ 
+    Node *ptr; 
+    Node *par; 
+    Node *child; 
+
+    // Searching for a Node with given value 
+	lock(root);
+	ptr = root
+
+    while (ptr != NULL) 
+    { 
+        // If key already exists, return 
+        if (ikey == (ptr->info)) 
+        { 
+			unlock(ptr);
+            return ptr; 
+        } 
+
+		par = ptr
+  
+        // Moving on left subtree. 
+        if (ikey < ptr->info) 
+        { 
+            if (ptr->l_thread == false) 
+				child = ptr->left
+				lock(child)
+                ptr = child
+            else
+                break; 
+        } 
+  
+        // Moving on right subtree. 
+        else
+        { 
+            if (ptr->r_thread == false) 
+				child = ptr->right;
+				lock(child);
+                ptr = child;
+            else
+                break; 
+        } 
+
+		unlock(par);
+    } 
+} 
+
+// Delete a Node in Binary Threaded Tree 
+struct Node *BSTDelete(struct Node *root, int ikey) 
+{ 
+    Node *ptr; // Current pointer
+    Node *par; // Parent pointer
+    Node *child; // Child pointer
+	int found = 0;	// Key is found 
+
+    // Searching for a Node with given value 
+	lock(root);
+	ptr = root
+
+	// Search the key
+    while (ptr != NULL) 
+    { 
+		if (dkey == ptr->info)
+		{
+			found = 1
+			break;
+		}
+
+		par = ptr
+
+		if (dkey < ptr->info)
+		{
+			if (ptr->lthread == false)
+			{
+				child = ptr->left;
+				lock(child);
+			}
+			else
+				break;
+		}
+		else {
+			if (ptr->rthread == false)
+			{
+				child = ptr->right;
+				lock(child);
+			}
+			else
+				break;
+		}
+
+		unlock(par);
+	} 
+
+	if (found == 0)
+		printf("The key does not found");
+
+	else if (ptr->lthread == false && ptr->rthread == false)
 	{
-		lock(root)
-		struct Node *tmp_ptr = root
-	} else {
-		return;
+		struct Node* par_succ = ptr;
+		struct Node* succ = ptr->right;
+
+		lock(succ);
+
+		while (succ->left != NULL)
+		{
+			parsucc = succ;
+			succ = succ->left;
+			lock(suck)
+		}
+
+		ptr->key = succ->key
 	}
-
-	while (tmp_ptr->is_leaf != 1 && tmp_ptr->key != key)
-	{
-		tmp_child = get_next(tmp_ptr, key); // Get next node
-
-		lock(tmp_child);
-		unlock(tmp_ptr);
-		tmp_ptr = tmp_child;
-	}
-
-	unlock(tmp_ptr);
-}
-
-void BSTInsert(struct Node* root, int key)
-{
-	struct Node *tmp_ptr;		// Temporary ptr
-	struct Node *tmp_child;		// Child node
-
-	lock(root)
-	tmp_ptr = root;
-	//lock_array[i++] = root.is_loc
-	lock_array[i++] = root
-
-	while (tmp_ptr.is_leaf != 1)
-	{
-		tmp_child = get_next(tmp_ptr, key); // Get next node
-
-		lock(tmp_child);
-		lock_array[i++] = tmp_child.is_locked;
-
-		tmp_ptr = child;
-		unlock(lock_array[i-2]);
-	}
-
-	Node tmp = new Node;
-
-	if (i = 1) // root leaf
-	{
-		tmp_ptr.l = tmp
-	}
-	else
-	{
-		tmp_child.l or r = tmp;
-	}
-
-	unlock(lock_array[i-1])
-}
-
-void BSTDelete(struct Node* root, int key)
-{
-	struct Node *tmp_ptr;		// Temporary ptr
-	struct Node *tmp_child;		// Child node
-
-	lock(root)
-	tmp_ptr = root;
-	//lock_array[i++] = root.is_loc
-	lock_array[i++] = root
-
-	while (tmp_ptr.is_leaf != 1)
-	{
-		tmp_child = get_next(tmp_ptr, key); // Get next node
-
-		lock(tmp_child);
-		lock_array[i++] = tmp_child.is_locked;
-
-		tmp_ptr = child;
-		unlock(lock_array[i-2]);
-	}
-
-	Node tmp = new Node;
-
-	if (i = 1) // root leaf
-	{
-		tmp_ptr.l = tmp
-	}
-	else
-	{
-		tmp_child.l or r = tmp;
-	}
-
-	unlock(lock_array[i-1])
-}
 
 \end{lstlisting}
 
 \paragraph{2.}
-We implement a new 
+We implement a fine-grain locking for the lock-based implementation of
+the concurrent threaded binary search tree. In our implementation we
+lock the parent node, the current node and the child node of each
+visit node.
 
 \paragraph{3.}
+Let us have the scenario that I have a null tree, then add a new key
+and then I delete this key. As a result we will have a null tree
+again.
+Liniarization points in Insertion: line 69 or line 88 where the new
+element is already inserted in the tree.
+Liniarization points in Deletion: line xx or line xx.
+
 
 \paragraph{4.}
+The algorithm is correct because for each node that we traverse we
+lock the parent node and the child node. By keeping these three nodes
+locked during insertion and deletion operation we ensure that we are
+going to perform correctly each one operation.
 
 \paragraph{5.}
+
+
+\paragraph{6.}
