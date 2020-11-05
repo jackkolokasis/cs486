@@ -29,4 +29,75 @@ wait in line 7. Also, all the process will have to iterate all the
 process in the loop.
 
 \paragraph{2.}
+Solution for the first part of the exercise:
 
+\begin{lstlisting}
+
+shared variables
+int array[c], next_ticket, now_serving, my_desk_id, current_ticket, counter;
+
+local variable i;
+
+insert_to_cs()
+{
+	int my_ticket	
+	my_ticket = fetch_and_incr(next_ticket)
+
+	while (now_serving != my_ticket);
+
+	while (counter == 0);
+
+	fetch_and_decr(counter)
+
+	my_desk = fetch_and_incr(next_desk)
+
+	int i = 0;
+
+	while (i = 0)
+	{
+		if (array[i%k].lock != 1)
+		{
+			lock(array[i%k])
+			break;
+		}
+		i++;
+
+		i (i >= c)
+		{
+			i = 0;
+		}
+	}
+}
+
+// CS
+
+exit_cs()
+{
+	unlock(array[i])
+
+	fetch_and_incr(counter)
+}
+
+\end{lstlisting}
+
+\paragraph{2.}
+Solution for the second part of the exercise:
+
+\begin{lstlisting}
+entry_section()
+{
+	while (worker[my_ticket % w].lock == 1);
+	
+	fetch_and_incr(worker[my_ticket % w].lock);
+
+	fetch_and_incr(samples)
+}
+
+exit_section()
+{
+	while(samples < k);
+
+	fetch_and_decr(samples)
+}
+
+\end{lstlisting}
