@@ -352,27 +352,124 @@ struct Node *BSTDelete(struct Node *root, int key)
 	else
 	{
 		// Delete root 
-		if (par == NULL)
+		struct Node* par_successor = ptr;
+		struct Node* successor = ptr->right;
+		lock(successor)
+
+		while(successor->left != NULL)
 		{
-			root = NULL;
+			par_successor = successor
+			successor = successor->left
+
 		}
 
+		lock(par_successor)
+		lock (successor)
+
+		ptr->key = successor->key
+
+		if (successor->l_thread == true && successor->r_thread == true)
+		{
+			struct Node* child;
+			root = caseA(root, parsucc, succ);	
+
+			if (successor->lthread == false)
+			{
+				child = successor->left
+				lock(child)
+			}
+			else {
+				child = successor->right
+				lock(child)
+			}
+
+			if (par_successor == NULL)
+				root = child;
+			else if (successor == successor->left)
+			{
+				par_successor->left = child;
+			}
+			else {
+				par_successor->right = child
+			}
+
+			Node *s = find_successor(successor)
+			lock(s)
+			Node *p = find_predecessor(successor)
+			lock(p)
+
+			// if successor has left subtree
+			if (successor->lthread == false)
+				p->right = s
+
+			// if successor has right subtree
+			else {
+				if (successor->rthread == false)
+					s->left = p
+			}
+
+			free(ptr)
+			unlock(par)
+			unlock(successor)
+			unlock(par_successor)
+			unlock(child)
+			unlock(p)
+			unlock(s)
+
+			return root;
+
+
+		}
 		// If the node to be deleted is left or its parent node
-		else if (ptr == par->left)
+		else 
 		{
-			par->lthread = true;
-			ptr->left = ptr->left;
-		}
+			stuct Node* child
+			if (successor->lthread == false)
+			{
+				child = successor->left
+				lock(child)
+			}
+			else {
+				child = successor->right
+				lock(child)
+			}
 
-		else
-		{
-			par->rthread = true;
-			par->right = ptr->right;
-		}
+			if (par_successor == NULL)
+				root = child;
+			else if (successor == par_successor->left)
+			{
+				par_successor->left = child;
+			}
+			else {
+				par_successor->right = child
+			}
 
-		free(ptr)
-		unlock(par)
-		return root;
+			Node *s = find_successor(successor)
+			lock(s)
+			Node *p = find_predecessor(successor)
+			lock(p)
+
+			// if ptr has left subtree
+			if (successor->lthread == false)
+				p->right = s
+
+			// if ptr has right subtree
+			else {
+				if (successor->rthread == false)
+					s->left = p
+			}
+
+			free(ptr)
+			unlock(par)
+			unlock(child)
+			unlock(p)
+			unlock(s)
+			unlock(successor)
+			unlock(par_successor)
+
+			return root;
+				
+			}
 	}
 
 \end{lstlisting}
