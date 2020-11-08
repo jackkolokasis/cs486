@@ -1,32 +1,71 @@
 \section*{Exercise A}
 
 \paragraph{1a.}
-In the scenario that we have two processes in the critical section (CS), 
-the condition in line 4 must be true.
+This algorithm presents the fair synchronization algorithm which uses
+some key ideas from Black-White Bakery algorithm. $P_i$ to get in its
+entry section of the critical section (CS) reads the value of the
+group and determines which of the two groups (0 or 1) it should
+belong. When the $P_i$ chooses a group, it waits until its group has
+priority over the other group and then it enters to the CS. 
+The order of which processes can enter to the CS is defined as
+follows:%
+(1) if two processes belong to two different groups, the process whose
+group as recorded in its state is different from the value of group is
+enabled and can enter to the CS and the other process has to wait, and
+%
+(2) if all the active processes belong to the same group then they can
+all enter to the CS.
+When a process exits from the CS set the group bit to a value which is
+different from the value of its state. Thus, exit process ($P_i$)
+gives priority to waiting processes which belong to the same group
+that $P_i$ process belongs to.
 
-For example: state[1] != group and state[2] != group
+\bigskip
+Our algorithm needs to ensure for correct synchronization that two
+waiting process $P_i$ and $P_j$, if $state[i] \neq group$ and
+$state[j] = group$ then $P_i$ must enter the CS and completes its exit
+section before $P_j$ enters its CS. 
 
-But the group changes when a process gets out from the critical
-section.
+\bigskip
+A process $P_i$ is enabled to
+enter its CS only when one of the following conditions are met: %
+(1) the value of $state_i \neq group$, in such case, $P_i$ will break
+out the for loop in line 4; or %
+(2) for all processes $state[j] \neq 1 - state[i]$ where no process
+belong to a different group than the group that $P_i$ belongs to. In
+that case, $P_i$ will execute the loop $n$ times and will exit.
+If none of these two conditions are true, $P_i$ will have to wait in
+line 7, until the value of the group changes or the process $P_j$ of
+that belongs to the other group changes its value.
+The process $P_j$ can become enabled until the value of the group
+change or all the processes of the group of $P_i$ complete their CS.
 
 \paragraph{1b.}
-Yes, this scenario is possible as we show:
-We have two processes: P1 and P2. The P1 gets in the CS while the P2
-is waiting in line 7. At this point, P1 gets out from the CS and it
-changes the value of the group variable. Then, changes the state[i] =
-3 and is executed until line 4. Then, it gets again to the CS.
-However, P2 is still in waiting in line 7 because is much slower
-process than P1.
+Assume a beginning process $P_i$ overtakes a waiting process $P_j$ in
+entering its critical section.  This can happen only if both $P_i$ and
+$P_j$ belong to the same group at the time when $P_i$ has completed
+executing line 2.  During the exit section of the CS $P_i$ will set
+the value of the group to $1 - state[i]$.  Thereafter, by the
+value of the group will not change until $P_j$ completes its exit
+section.  If $P_i$ tries to enter to the CS again while $P_j$ has not
+completed its exit section yet, then after passing through line 1
+$P_i$ will belong to a different group than $P_j$ and the value of the
+group bit will be the same as the value of $state[i]$. Thus $P_i$ will
+not become enabled again until $P_j$ completes its exit section and
+changes the value of its state $P_j$. Thus, the algorithm satisfies
+fairness.
 
 \paragraph{1c.}
-If we remove lines 1,5 then we do not guarantee that a process has
-been enter to a group first and then will start to be executed.
+If we omit line 1 and 5 will result in an incorrect algorithm. Line 1
+and 5 ensures that a process has started executing its doorway code.
+If we remove these two lines then a none beginning process $P_i$ may
+enter in CS ahead of another waiting process $P_j$ twice: the first
+time if $P_i$ is running on the other group and the second time if
+$P_i$ pass $P_q$ which is waiting on the same group and enters in CS
+first.
 
 \paragraph{1d.}
-Line 4 is used to have fast access in the CS. If we remove line 4,
-then we will have performance penalty because all the processes will
-wait in line 7. Also, all the process will have to iterate all the
-process in the loop.
+Line 4 is used to ensure priority between the groups.
 
 \paragraph{2.}
 Solution for the first part of the exercise:
@@ -36,9 +75,7 @@ Solution for the first part of the exercise:
 shared variables
 int array[c], next_ticket, now_serving, my_desk_id, current_ticket, counter;
 
-local variable i;
-
-insert_to_cs()
+void hospital()
 {
 	int my_ticket	
 	my_ticket = fetch_and_incr(next_ticket)
@@ -53,11 +90,11 @@ insert_to_cs()
 
 	int i = 0;
 
-	while (i = 0)
+	while (true)
 	{
-		if (array[i%k].lock != 1)
+		if (array[i].lock != 1)
 		{
-			lock(array[i%k])
+			lock(array[i])
 			break;
 		}
 		i++;
@@ -67,12 +104,9 @@ insert_to_cs()
 			i = 0;
 		}
 	}
-}
 
 // CS
 
-exit_cs()
-{
 	unlock(array[i])
 
 	fetch_and_incr(counter)
