@@ -1,11 +1,15 @@
 \section*{Exercise B}
 \paragraph{1.}
-If we delete the the line \textbf{pred.next = curr} then we will have
-the following possible scenarios: (1) the thread is going through
-nodes that have been removed and thus, pred can point to a node
-already removed. (2) It possible for new nodes to be added before the
-current \textbf{pred.next} thus, the validation would not have the
-correct status.
+If we delete the line \textbf{pred.next = curr} then we will have the
+following scenarios where the thread is going through nodes that have
+been removed and thus, pred can point to a node already removed. 
+
+\textbf{Example:}
+If we have a list with 3 elements: 10, 40, and 50. The tread A try to
+delete the node in 40 while the thread B try to insert the node 45
+between node 40 and 50. While the thread B tries to insert the new
+node does not see the new \textbf{pred.next = curr} as a result to
+connect the new node with the already deleted node 40.
 
 \paragraph{2}
 In the case of the Lazy algorithm, canceling the flag marked
