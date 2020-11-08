@@ -73,7 +73,7 @@ Solution for the first part of the exercise:
 \begin{lstlisting}[style=mycode]
 
 shared variables
-int array[c], next_ticket, now_serving, my_desk_id, current_ticket, counter;
+int array[c], next_ticket, now_serving, desks, current_ticket, counter;
 
 void hospital()
 {
@@ -86,7 +86,13 @@ void hospital()
 
 	fetch_and_decr(counter)
 
-	my_desk = fetch_and_incr(next_desk)
+	while (desks == 0);
+
+	fetch_and_decr(desks)
+	
+	// Fill documents 
+
+	fetch_and_incr(desks)
 
 	int i = 0;
 
@@ -115,23 +121,60 @@ void hospital()
 \end{lstlisting}
 
 \paragraph{2.}
-Solution for the second part of the exercise:
+Solution for the second part of the exercise (graduate):
 
 \begin{lstlisting}[style=mycode]
 entry_section()
 {
+
+shared variables
+int array[c], next_ticket, now_serving, desks, current_ticket, counter;
+
+void hospital()
+{
+	int my_ticket	
+	my_ticket = fetch_and_incr(next_ticket)
+
+	while (now_serving != my_ticket);
+
+	while (counter == 0);
+
+	fetch_and_decr(counter)
+
+	while (desks == 0);
+
+	fetch_and_decr(desks)
+	
+	// Fill documents 
+
+	fetch_and_incr(desks)
+
+	int i = 0;
+
+	while (true)
+	{
+		if (array[i].lock != 1)
+		{
+			lock(array[i])
+			break;
+		}
+		i++;
+
+		i (i >= c)
+		{
+			i = 0;
+		}
+	}
+
 	while (worker[my_ticket % w].lock == 1);
 	
 	fetch_and_incr(worker[my_ticket % w].lock);
 
 	fetch_and_incr(samples)
-}
 
-exit_section()
-{
-	while(samples < k);
+	unlock(array[i])
 
-	fetch_and_decr(samples)
+	fetch_and_incr(counter)
 }
 
 \end{lstlisting}
