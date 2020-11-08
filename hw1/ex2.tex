@@ -12,9 +12,16 @@ node does not see the new \textbf{pred.next = curr} as a result to
 connect the new node with the already deleted node 40.
 
 \paragraph{2}
-In the case of the Lazy algorithm, canceling the flag marked
-invalidates the validate() and contains() method that depend on this
-mark.
+In the case of the Lazy algorithm, if we mark a node as removed by
+setting its next field to null then this invalidates the validate()
+method that depends on this mark.
+
+\textbf{Example:}
+If we have a list with 3 elements: 10, 40, and 50. The thread A tries
+to delete the node 40 while thread B tries to access node 50. When the
+tread A is going to set the next pointer to null then the node 50 is
+going to be unreachable. So, thread B will not find node 50 and this
+is wrong.
 
 \paragraph{3}
 No, we cannot modify the insert() method of the fine-grained

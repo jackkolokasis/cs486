@@ -12,7 +12,7 @@ struct Node {
 };
 
 // Insert a Node in Binary Threaded Tree 
-struct Node *BSTInsert(struct Node *root, int ikey) 
+struct Node *BSTInsert(struct Node *root, int key) 
 { 
     Node *ptr; 
     Node *par = NULL;		// Parent node
@@ -25,7 +25,7 @@ struct Node *BSTInsert(struct Node *root, int ikey)
     while (ptr != NULL) 
     { 
         // If key already exists, return 
-        if (ikey == (ptr->info)) 
+        if (key == (ptr->key)) 
         { 
 			unlock(root);
             return ptr; 
@@ -34,7 +34,7 @@ struct Node *BSTInsert(struct Node *root, int ikey)
         par = ptr;	// Update parent pointer 
   
         // Moving on left subtree. 
-        if (ikey < ptr->info) 
+        if (key < ptr->key) 
         { 
             if (ptr->l_thread == false) 
 				child = ptr->left
@@ -60,7 +60,7 @@ struct Node *BSTInsert(struct Node *root, int ikey)
   
     // Create a new node 
     Node *tmp = new Node; 
-    tmp->info = ikey; 
+    tmp->key = key; 
     tmp->l_thread = true; 
     tmp->r_thread = true; 
   
@@ -72,7 +72,7 @@ struct Node *BSTInsert(struct Node *root, int ikey)
 		unlock (par);
 		return root;
     } 
-    else if (ikey < (par->info)) 
+    else if (key < (par->key)) 
     { 
         tmp->left = par->left; 
         tmp->right = par; 
@@ -94,7 +94,7 @@ struct Node *BSTInsert(struct Node *root, int ikey)
 } 
 
 // Insert a Node in Binary Threaded Tree 
-struct Node *BSTSearch(struct Node *root, int ikey) 
+struct Node *BSTSearch(struct Node *root, int key) 
 { 
     Node *ptr; 
     Node *par; 
@@ -107,7 +107,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
     while (ptr != NULL) 
     { 
         // If key already exists, return 
-        if (ikey == (ptr->info)) 
+        if (key == (ptr->key)) 
         { 
 			unlock(ptr);
             return ptr; 
@@ -116,7 +116,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
 		par = ptr
   
         // Moving on left subtree. 
-        if (ikey < ptr->info) 
+        if (key < ptr->key) 
         { 
             if (ptr->l_thread == false) 
 				child = ptr->left
@@ -142,7 +142,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
 } 
 
 // Insert a Node in Binary Threaded Tree 
-struct Node *BSTSearch(struct Node *root, int ikey) 
+struct Node *BSTSearch(struct Node *root, int key) 
 { 
     Node *ptr; 
     Node *par; 
@@ -155,7 +155,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
     while (ptr != NULL) 
     { 
         // If key already exists, return 
-        if (ikey == (ptr->info)) 
+        if (key == (ptr->key)) 
         { 
 			unlock(ptr);
             return ptr; 
@@ -164,7 +164,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
 		par = ptr
   
         // Moving on left subtree. 
-        if (ikey < ptr->info) 
+        if (key < ptr->key) 
         { 
             if (ptr->l_thread == false) 
 				child = ptr->left
@@ -190,7 +190,7 @@ struct Node *BSTSearch(struct Node *root, int ikey)
 } 
 
 // Delete a Node in Binary Threaded Tree 
-struct Node *BSTDelete(struct Node *root, int ikey) 
+struct Node *BSTDelete(struct Node *root, int key) 
 { 
     Node *ptr; // Current pointer
     Node *par; // Parent pointer
@@ -204,7 +204,7 @@ struct Node *BSTDelete(struct Node *root, int ikey)
 	// Search the key
     while (ptr != NULL) 
     { 
-		if (dkey == ptr->info)
+		if (dkey == ptr->key)
 		{
 			found = 1
 			break;
@@ -212,12 +212,13 @@ struct Node *BSTDelete(struct Node *root, int ikey)
 
 		par = ptr
 
-		if (dkey < ptr->info)
+		if (dkey < ptr->key)
 		{
 			if (ptr->lthread == false)
 			{
 				child = ptr->left;
 				lock(child);
+				ptr = child;
 			}
 			else
 				break;
@@ -227,6 +228,7 @@ struct Node *BSTDelete(struct Node *root, int ikey)
 			{
 				child = ptr->right;
 				lock(child);
+				ptr = child;
 			}
 			else
 				break;
@@ -255,6 +257,124 @@ struct Node *BSTDelete(struct Node *root, int ikey)
 		ptr->key = succ->key
 	}
 
+	else if (ptr->lthread == false)
+	{
+		if (ptr->lthread == false)
+		{
+			child = ptr->left
+			lock(child)
+		}
+		else {
+			child = ptr->right
+			lock(child)
+		}
+
+		if (par == NULL)
+			root = child;
+		else if (ptr == par->left)
+		{
+			par->left = child;
+		}
+		else {
+			par->right = child
+		}
+
+		Node *s = find_successor(ptr)
+		lock(s)
+		Node *p = find_predecessor(ptr)
+		lock(p)
+
+		// if ptr has left subtree
+		if (ptr->lthread == false)
+			p->right = s
+
+		// if ptr has right subtree
+		else {
+			if (ptr->rthread == false)
+				s->left = p
+		}
+
+		free(ptr)
+		unlock(par)
+		unlock(child)
+		unlock(p)
+		unlock(s)
+
+		return root;
+	}
+
+	else if (ptr->rthread == false)
+	{
+		if (ptr->lthread == false)
+		{
+			child = ptr->left
+			lock(child)
+		}
+		else {
+			child = ptr->right
+			lock(child)
+		}
+
+		if (par == NULL)
+			root = child;
+		else if (ptr == par->left)
+		{
+			par->left = child;
+		}
+		else {
+			par->right = child
+		}
+
+		Node *s = find_successor(ptr)
+		lock(s)
+		Node *p = find_predecessor(ptr)
+		lock(p)
+
+		// if ptr has left subtree
+		if (ptr->lthread == false)
+			p->right = s
+
+		// if ptr has right subtree
+		else {
+			if (ptr->rthread == false)
+				s->left = p
+		}
+
+		free(ptr)
+		unlock(par)
+		unlock(child)
+		unlock(p)
+		unlock(s)
+
+		return root;
+
+	}
+	else
+	{
+		// Delete root 
+		if (par == NULL)
+		{
+			root = NULL;
+		}
+
+		// If the node to be deleted is left or its parent node
+		else if (ptr == par->left)
+		{
+			par->lthread = true;
+			ptr->left = ptr->left;
+		}
+
+		else
+		{
+			par->rthread = true;
+			par->right = ptr->right;
+		}
+
+		free(ptr)
+		unlock(par)
+		return root;
+	}
+
 \end{lstlisting}
 
 \paragraph{2.}
@@ -270,7 +390,6 @@ again.
 Liniarization points in Insertion: line 69 or line 88 where the new
 element is already inserted in the tree.
 Liniarization points in Deletion: line xx or line xx.
-
 
 \paragraph{4.}
 The algorithm is correct because for each node that we traverse we
