@@ -177,7 +177,6 @@ struct Node *BSTDelete(struct Node *root, int key)
 			if (ptr->l_thread == false)
 			{
 				child = ptr->left;
-				lock(child);
 				ptr = child;
 			}
 			else
@@ -187,15 +186,15 @@ struct Node *BSTDelete(struct Node *root, int key)
 			if (ptr->r_thread == false)
 			{
 				child = ptr->right;
-				lock(child);
 				ptr = child;
 			}
 			else
 				break;
 		}
-
-		unlock(par);
 	} 
+	
+	lock(ptr)
+	lock(par)
 
 	if (found == 0)
 		printf("The key does not found");
@@ -205,16 +204,19 @@ struct Node *BSTDelete(struct Node *root, int key)
 		struct Node* par_succ = ptr;
 		struct Node* succ = ptr->right;
 
-		lock(succ);
-
 		while (succ->left != NULL)
 		{
 			parsucc = succ;
 			succ = succ->left;
-			lock(suck)
 		}
 
-		ptr->key = succ->key
+		lock(suck)
+
+		if (validate(ptr, suck))
+		{
+			ptr->key = succ->key
+			succ->marked = true
+		}
 	}
 
 	else if (ptr->l_thread == false)
@@ -255,6 +257,8 @@ struct Node *BSTDelete(struct Node *root, int key)
 				if (ptr->r_thread == false)
 					s->left = p
 			}
+
+			ptr->marked = true;
 		}
 
 		free(ptr)
@@ -304,6 +308,8 @@ struct Node *BSTDelete(struct Node *root, int key)
 				if (ptr->r_thread == false)
 					s->left = p
 			}
+
+			ptr->marked = true;
 		}
 
 		free(ptr)
@@ -374,6 +380,8 @@ struct Node *BSTDelete(struct Node *root, int key)
 					if (successor->r_thread == false)
 						s->left = p
 				}
+
+				ptr->marked = true;
 			}
 
 			free(ptr)
@@ -426,6 +434,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 					if (successor->r_thread == false)
 						s->left = p
 				}
+				ptr->marked = true;
 			}
 
 			free(ptr)
@@ -445,37 +454,24 @@ struct Node *BSTDelete(struct Node *root, int key)
 
 \paragraph{2.}
 We implement a lazy synchronization locking for the lock-based
-implementation of the concurrent threaded binary search tree. In our
-implementation we lock the parent node, the current node and the child
-node of each visit node. Before we add a new node we check the marked
-bit if is enabled.
+implementation of the concurrent threaded binary search tree.  In add,
+search, remove operation we scan through the tree without acquiring
+any locks, traversing both marked and umarked nodes.  When we are
+going to insert or delete a node then we lock the parent, current, and
+child pointers and we check if they are marked. In the case that these
+nodes are marked then these nodes are not valid. So, we do not perform
+the operation.
 
 \paragraph{3.}
-Let us have the scenario that I have a null tree, then add a new key
-and then I delete this key. As a result we will have a null tree
-again.
-Liniarization points in Insertion: line 69 or line 88 where the new
-element is already inserted in the tree.
-Liniarization points in Deletion: after free operation when the nodes
-are going to be unlocked.
+After unlocking operations we could have liniarization points.
 
 \paragraph{4.}
-The algorithm is correct because for each node that we traverse we
-lock the parent node and the child node. By keeping these three nodes
-locked during insertion and deletion operation we ensure that we are
-going to perform correctly each one operation.
+The algorithm is correct because we ensure using validate() method
+that a node that we make operations is not marked as deleted node.
 
 \paragraph{5.}
-The algorithm is deadlock free because we lock only the current node
-and its parent and child. So, all the threads can lock a node. Also by
-locking individual nodes our threads can do progress in different
-parts of the tree.
+The algorithm is deadlock-free and starvation-free because threads
+could traverse the list and do not wait on locked nodes. Also this
+implementation allows threads to work on different nodes of the tree.
 
 \paragraph{6.}
-In cache-coherent NUMA architecture our algorithm on every lock/unlock
-operation will produce invalidation to the other threads caches that
-are waiting to get the lock for a node. Trying to use TTAS locks the
-cache misses is equall to the numbers of set lock and unlock
-operations we implement. In cache-less NUMA machines we will have
-remote accesses for every check and update of the lock/unlock
-operation. 
