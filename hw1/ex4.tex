@@ -5,18 +5,24 @@
 // Node structure
 struct Node {
 	int _key;               // Node key
+	boolean marked;			// Marked bit
 	struct Node *left;      // Left child
 	struct Node *right;     // Right child
 	struct Node *l_thread;  // Left threaded
 	struct Node *r_thread;  // Right threaded
 };
 
+boolean validate(Node *par, Node *curr)
+{
+	return !par->marked && !curr->marked;
+}
+
 // Insert a Node in Binary Threaded Tree 
 struct Node *BSTInsert(struct Node *root, int key) 
 { 
     Node *ptr; 
     Node *par = NULL;		// Parent node
-	Node *child = NULL;	// Child node
+	Node *child = NULL;	    // Child node
 
     // Searching for a Node with given value 
 	lock(root);
@@ -38,7 +44,6 @@ struct Node *BSTInsert(struct Node *root, int key)
         { 
             if (ptr->l_thread == false) 
 				child = ptr->left
-				lock(child)
                 ptr = child
             else
                 break; 
@@ -49,14 +54,14 @@ struct Node *BSTInsert(struct Node *root, int key)
         { 
             if (ptr->r_thread == false) 
 				child = ptr->right;
-				lock(child);
                 ptr = child;
             else
                 break; 
         } 
-
-		unlock(par);
     } 
+
+	lock(par)
+	lock(ptr)
   
     // Create a new node 
     Node *tmp = new Node; 
@@ -74,21 +79,27 @@ struct Node *BSTInsert(struct Node *root, int key)
     } 
     else if (key < (par->key)) 
     { 
-        tmp->left = par->left; 
-        tmp->right = par; 
-        par->l_thread = false; 
-        par->left = tmp; 
+		if (validate(par, ptr))
+		{
+			tmp->left = par->left; 
+			tmp->right = par; 
+			par->l_thread = false; 
+			par->left = tmp; 
+		}
     } 
     else
     { 
-        tmp->left = par; 
-        tmp->right = par->right; 
-        par->r_thread = false; 
-        par->right = tmp; 
+		if (validate(par, ptr))
+		{
+			tmp->left = par; 
+			tmp->right = par->right; 
+			par->r_thread = false; 
+			par->right = tmp; 
+		}
     } 
 
 	unlock(par)
-	unlock(root)
+	unlock(ptr)
   
     return root; 
 } 
@@ -96,12 +107,11 @@ struct Node *BSTInsert(struct Node *root, int key)
 // Insert a Node in Binary Threaded Tree 
 struct Node *BSTSearch(struct Node *root, int key) 
 { 
-    Node *ptr; 
-    Node *par; 
+    Node *ptr;
+    Node *par;
     Node *child; 
 
     // Searching for a Node with given value 
-	lock(root);
 	ptr = root
 
     while (ptr != NULL) 
@@ -109,18 +119,19 @@ struct Node *BSTSearch(struct Node *root, int key)
         // If key already exists, return 
         if (key == (ptr->key)) 
         { 
-			unlock(ptr);
-            return ptr; 
+			return ptr && !ptr. 
         } 
 
-		par = ptr
+		if (!ptr->marked)
+			return ptr;
+		else 
+			return NULL;
   
         // Moving on left subtree. 
         if (key < ptr->key) 
         { 
             if (ptr->l_thread == false) 
 				child = ptr->left
-				lock(child)
                 ptr = child
             else
                 break; 
@@ -131,61 +142,10 @@ struct Node *BSTSearch(struct Node *root, int key)
         { 
             if (ptr->r_thread == false) 
 				child = ptr->right;
-				lock(child);
                 ptr = child;
             else
                 break; 
         } 
-
-		unlock(par);
-    } 
-} 
-
-// Insert a Node in Binary Threaded Tree 
-struct Node *BSTSearch(struct Node *root, int key) 
-{ 
-    Node *ptr; 
-    Node *par; 
-    Node *child; 
-
-    // Searching for a Node with given value 
-	lock(root);
-	ptr = root
-
-    while (ptr != NULL) 
-    { 
-        // If key already exists, return 
-        if (key == (ptr->key)) 
-        { 
-			unlock(ptr);
-            return ptr; 
-        } 
-
-		par = ptr
-  
-        // Moving on left subtree. 
-        if (key < ptr->key) 
-        { 
-            if (ptr->l_thread == false) 
-				child = ptr->left
-				lock(child)
-                ptr = child
-            else
-                break; 
-        } 
-  
-        // Moving on right subtree. 
-        else
-        { 
-            if (ptr->r_thread == false) 
-				child = ptr->right;
-				lock(child);
-                ptr = child;
-            else
-                break; 
-        } 
-
-		unlock(par);
     } 
 } 
 
@@ -214,7 +174,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 
 		if (dkey < ptr->key)
 		{
-			if (ptr->lthread == false)
+			if (ptr->l_thread == false)
 			{
 				child = ptr->left;
 				lock(child);
@@ -224,7 +184,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 				break;
 		}
 		else {
-			if (ptr->rthread == false)
+			if (ptr->r_thread == false)
 			{
 				child = ptr->right;
 				lock(child);
@@ -240,7 +200,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 	if (found == 0)
 		printf("The key does not found");
 
-	else if (ptr->lthread == false && ptr->rthread == false)
+	else if (ptr->l_thread == false && ptr->r_thread == false)
 	{
 		struct Node* par_succ = ptr;
 		struct Node* succ = ptr->right;
@@ -257,9 +217,9 @@ struct Node *BSTDelete(struct Node *root, int key)
 		ptr->key = succ->key
 	}
 
-	else if (ptr->lthread == false)
+	else if (ptr->l_thread == false)
 	{
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 		{
 			child = ptr->left
 			lock(child)
@@ -284,14 +244,17 @@ struct Node *BSTDelete(struct Node *root, int key)
 		Node *p = find_predecessor(ptr)
 		lock(p)
 
-		// if ptr has left subtree
-		if (ptr->lthread == false)
-			p->right = s
+		if (validate(p, s))
+		{
+			// if ptr has left subtree
+			if (ptr->l_thread == false)
+				p->right = s
 
-		// if ptr has right subtree
-		else {
-			if (ptr->rthread == false)
-				s->left = p
+			// if ptr has right subtree
+			else {
+				if (ptr->r_thread == false)
+					s->left = p
+			}
 		}
 
 		free(ptr)
@@ -303,9 +266,9 @@ struct Node *BSTDelete(struct Node *root, int key)
 		return root;
 	}
 
-	else if (ptr->rthread == false)
+	else if (ptr->r_thread == false)
 	{
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 		{
 			child = ptr->left
 			lock(child)
@@ -329,15 +292,18 @@ struct Node *BSTDelete(struct Node *root, int key)
 		lock(s)
 		Node *p = find_predecessor(ptr)
 		lock(p)
+		
+		if (validate(p, s))
+		{
+			// if ptr has left subtree
+			if (ptr->l_thread == false)
+				p->right = s
 
-		// if ptr has left subtree
-		if (ptr->lthread == false)
-			p->right = s
-
-		// if ptr has right subtree
-		else {
-			if (ptr->rthread == false)
-				s->left = p
+			// if ptr has right subtree
+			else {
+				if (ptr->r_thread == false)
+					s->left = p
+			}
 		}
 
 		free(ptr)
@@ -371,9 +337,8 @@ struct Node *BSTDelete(struct Node *root, int key)
 		if (successor->l_thread == true && successor->r_thread == true)
 		{
 			struct Node* child;
-			root = caseA(root, parsucc, succ);	
 
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 			{
 				child = successor->left
 				lock(child)
@@ -398,14 +363,17 @@ struct Node *BSTDelete(struct Node *root, int key)
 			Node *p = find_predecessor(successor)
 			lock(p)
 
-			// if successor has left subtree
-			if (successor->lthread == false)
-				p->right = s
+			if(validate(p, s))
+			{
+				// if successor has left subtree
+				if (successor->l_thread == false)
+					p->right = s
 
-			// if successor has right subtree
-			else {
-				if (successor->rthread == false)
-					s->left = p
+				// if successor has right subtree
+				else {
+					if (successor->r_thread == false)
+						s->left = p
+				}
 			}
 
 			free(ptr)
@@ -417,14 +385,12 @@ struct Node *BSTDelete(struct Node *root, int key)
 			unlock(s)
 
 			return root;
-
-
 		}
 		// If the node to be deleted is left or its parent node
 		else 
 		{
 			stuct Node* child
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 			{
 				child = successor->left
 				lock(child)
@@ -449,14 +415,17 @@ struct Node *BSTDelete(struct Node *root, int key)
 			Node *p = find_predecessor(successor)
 			lock(p)
 
-			// if ptr has left subtree
-			if (successor->lthread == false)
-				p->right = s
+			if(validate(p, s))
+			{
+				// if ptr has left subtree
+				if (successor->l_thread == false)
+					p->right = s
 
-			// if ptr has right subtree
-			else {
-				if (successor->rthread == false)
-					s->left = p
+				// if ptr has right subtree
+				else {
+					if (successor->r_thread == false)
+						s->left = p
+				}
 			}
 
 			free(ptr)
@@ -475,10 +444,11 @@ struct Node *BSTDelete(struct Node *root, int key)
 \end{lstlisting}
 
 \paragraph{2.}
-We implement a fine-grain locking for the lock-based implementation of
-the concurrent threaded binary search tree. In our implementation we
-lock the parent node, the current node and the child node of each
-visit node.
+We implement a lazy synchronization locking for the lock-based
+implementation of the concurrent threaded binary search tree. In our
+implementation we lock the parent node, the current node and the child
+node of each visit node. Before we add a new node we check the marked
+bit if is enabled.
 
 \paragraph{3.}
 Let us have the scenario that I have a null tree, then add a new key
@@ -486,7 +456,8 @@ and then I delete this key. As a result we will have a null tree
 again.
 Liniarization points in Insertion: line 69 or line 88 where the new
 element is already inserted in the tree.
-Liniarization points in Deletion: line xx or line xx.
+Liniarization points in Deletion: after free operation when the nodes
+are going to be unlocked.
 
 \paragraph{4.}
 The algorithm is correct because for each node that we traverse we
@@ -495,7 +466,16 @@ locked during insertion and deletion operation we ensure that we are
 going to perform correctly each one operation.
 
 \paragraph{5.}
-
+The algorithm is deadlock free because we lock only the current node
+and its parent and child. So, all the threads can lock a node. Also by
+locking individual nodes our threads can do progress in different
+parts of the tree.
 
 \paragraph{6.}
-
+In cache-coherent NUMA architecture our algorithm on every lock/unlock
+operation will produce invalidation to the other threads caches that
+are waiting to get the lock for a node. Trying to use TTAS locks the
+cache misses is equall to the numbers of set lock and unlock
+operations we implement. In cache-less NUMA machines we will have
+remote accesses for every check and update of the lock/unlock
+operation. 

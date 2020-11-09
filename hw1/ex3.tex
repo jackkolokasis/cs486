@@ -141,54 +141,6 @@ struct Node *BSTSearch(struct Node *root, int key)
     } 
 } 
 
-// Insert a Node in Binary Threaded Tree 
-struct Node *BSTSearch(struct Node *root, int key) 
-{ 
-    Node *ptr; 
-    Node *par; 
-    Node *child; 
-
-    // Searching for a Node with given value 
-	lock(root);
-	ptr = root
-
-    while (ptr != NULL) 
-    { 
-        // If key already exists, return 
-        if (key == (ptr->key)) 
-        { 
-			unlock(ptr);
-            return ptr; 
-        } 
-
-		par = ptr
-  
-        // Moving on left subtree. 
-        if (key < ptr->key) 
-        { 
-            if (ptr->l_thread == false) 
-				child = ptr->left
-				lock(child)
-                ptr = child
-            else
-                break; 
-        } 
-  
-        // Moving on right subtree. 
-        else
-        { 
-            if (ptr->r_thread == false) 
-				child = ptr->right;
-				lock(child);
-                ptr = child;
-            else
-                break; 
-        } 
-
-		unlock(par);
-    } 
-} 
-
 // Delete a Node in Binary Threaded Tree 
 struct Node *BSTDelete(struct Node *root, int key) 
 { 
@@ -371,8 +323,6 @@ struct Node *BSTDelete(struct Node *root, int key)
 		if (successor->l_thread == true && successor->r_thread == true)
 		{
 			struct Node* child;
-			root = caseA(root, parsucc, succ);	
-
 			if (successor->l_thread == false)
 			{
 				child = successor->left
