@@ -214,7 +214,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 
 		if (dkey < ptr->key)
 		{
-			if (ptr->lthread == false)
+			if (ptr->l_thread == false)
 			{
 				child = ptr->left;
 				lock(child);
@@ -224,7 +224,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 				break;
 		}
 		else {
-			if (ptr->rthread == false)
+			if (ptr->r_thread == false)
 			{
 				child = ptr->right;
 				lock(child);
@@ -240,7 +240,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 	if (found == 0)
 		printf("The key does not found");
 
-	else if (ptr->lthread == false && ptr->rthread == false)
+	else if (ptr->l_thread == false && ptr->r_thread == false)
 	{
 		struct Node* par_succ = ptr;
 		struct Node* succ = ptr->right;
@@ -257,9 +257,9 @@ struct Node *BSTDelete(struct Node *root, int key)
 		ptr->key = succ->key
 	}
 
-	else if (ptr->lthread == false)
+	else if (ptr->l_thread == false)
 	{
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 		{
 			child = ptr->left
 			lock(child)
@@ -285,12 +285,12 @@ struct Node *BSTDelete(struct Node *root, int key)
 		lock(p)
 
 		// if ptr has left subtree
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 			p->right = s
 
 		// if ptr has right subtree
 		else {
-			if (ptr->rthread == false)
+			if (ptr->r_thread == false)
 				s->left = p
 		}
 
@@ -303,9 +303,9 @@ struct Node *BSTDelete(struct Node *root, int key)
 		return root;
 	}
 
-	else if (ptr->rthread == false)
+	else if (ptr->r_thread == false)
 	{
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 		{
 			child = ptr->left
 			lock(child)
@@ -331,12 +331,12 @@ struct Node *BSTDelete(struct Node *root, int key)
 		lock(p)
 
 		// if ptr has left subtree
-		if (ptr->lthread == false)
+		if (ptr->l_thread == false)
 			p->right = s
 
 		// if ptr has right subtree
 		else {
-			if (ptr->rthread == false)
+			if (ptr->r_thread == false)
 				s->left = p
 		}
 
@@ -373,7 +373,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 			struct Node* child;
 			root = caseA(root, parsucc, succ);	
 
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 			{
 				child = successor->left
 				lock(child)
@@ -399,12 +399,12 @@ struct Node *BSTDelete(struct Node *root, int key)
 			lock(p)
 
 			// if successor has left subtree
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 				p->right = s
 
 			// if successor has right subtree
 			else {
-				if (successor->rthread == false)
+				if (successor->r_thread == false)
 					s->left = p
 			}
 
@@ -424,7 +424,7 @@ struct Node *BSTDelete(struct Node *root, int key)
 		else 
 		{
 			stuct Node* child
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 			{
 				child = successor->left
 				lock(child)
@@ -450,12 +450,12 @@ struct Node *BSTDelete(struct Node *root, int key)
 			lock(p)
 
 			// if ptr has left subtree
-			if (successor->lthread == false)
+			if (successor->l_thread == false)
 				p->right = s
 
 			// if ptr has right subtree
 			else {
-				if (successor->rthread == false)
+				if (successor->r_thread == false)
 					s->left = p
 			}
 
@@ -501,6 +501,12 @@ and its parent and child. So, all the threads can lock a node. Also by
 locking individual nodes our threads can do progress in different
 parts of the tree.
 
-
 \paragraph{6.}
+In cache-coherent NUMA architecture our algorithm on every lock/unlock
+operation will produce invalidation to the other threads caches that
+are waiting to get the lock for a node. Trying to use TTAS locks the
+cache misses is equall to the numbers of set lock and unlock
+operations we implement. In cache-less NUMA machines we will have
+remote accesses for every check and update of the lock/unlock
+operation. 
 
