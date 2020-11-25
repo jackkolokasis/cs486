@@ -1,0 +1,19 @@
+[
+{
+  "directory": "/home/kolokasis/csd/courses/cs486/programming1",
+  "command": "cc -c singleLinkedList.c",
+  "file": "singleLinkedList.c"
+},
+
+{
+  "directory": "/home/kolokasis/csd/courses/cs486/programming1",
+  "command": "cc -c -o all singleLinkedList.o main.c",
+  "file": "main.c"
+},
+
+{
+  "directory": "/home/kolokasis/csd/courses/cs486/programming1",
+  "command": "cc -c singleLinkedList.h",
+  "file": "singleLinkedList.h"
+}
+]
