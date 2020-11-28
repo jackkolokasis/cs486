@@ -10,6 +10,9 @@
 #define log_error(M, ...) fprintf(stderr, "[ERROR] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 #define assertf(A, M, ...) if(!(A)) {log_error(M, ##__VA_ARGS__); assert(A); }
 
-#define DEBUG 0  // Enable Debug Mode
+#define DEBUG 1		// Enable Debug Mode
+
+#define INVALID -325 // Invalid value
+
 
 #endif

@@ -1,0 +1,4 @@
+*.o
+err
+out
+phase1

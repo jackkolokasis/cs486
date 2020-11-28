@@ -1,4 +1,5 @@
 #include <math.h>
+#include <limits.h>
 #include "singleLinkedList.h"
 #include "sharedDefines.h"
 
@@ -14,6 +15,7 @@ int validate(struct Node *pred, struct Node *curr)
 		}
 		node = node->next;
 	}
+
 	return 0;
 }
 
@@ -25,11 +27,11 @@ int list_optcc_init(int num_posts)
 	linked_list->tail = malloc(sizeof(struct Node));
 
 	// Init head node
-	linked_list->head->postId = -1;
+	linked_list->head->postId = INT_MIN;
 	linked_list->head->next = linked_list->tail;
 
 	// Init tail node
-	linked_list->tail->postId = -1;
+	linked_list->tail->postId = INT_MAX;
 	linked_list->tail->next = NULL;
 
 	total_nodes = 2 * pow(num_posts, 2);
@@ -61,12 +63,12 @@ int list_optcc_remove(int postId)
 				pred->next = curr->next;
 				pthread_mutex_unlock(&pred->lock);
 				pthread_mutex_unlock(&curr->lock);
-				return 1;
+				return postId;
 			}
 
 			pthread_mutex_unlock(&pred->lock);
 			pthread_mutex_unlock(&curr->lock);
-			return 0;
+			return INVALID;
 		}
 		else 
 		{
@@ -95,27 +97,24 @@ int list_optcc_add(int postId)
 
 		if (validate(pred, curr))
 		{
-			if (curr->postId == postId)
+			if (curr->postId != postId)
 			{
-				pthread_mutex_unlock(&pred->lock);
+				struct Node *node = malloc(sizeof(struct Node));
+
+				node->postId = postId;
+				node->next = curr;
+				pred->next = node;
+
 				pthread_mutex_unlock(&curr->lock);
+				pthread_mutex_unlock(&pred->lock);
 
-				return 0;
+				return 1;
 			}
-
-			struct Node *node = malloc(sizeof(struct Node));
-
-			node->next = curr;
-			pred->next = node;
-
-			pthread_mutex_unlock(&pred->lock);
-			pthread_mutex_unlock(&curr->lock);
-			return 1;
 		}
 		else
 		{
-			pthread_mutex_unlock(&pred->lock);
 			pthread_mutex_unlock(&curr->lock);
+			pthread_mutex_unlock(&pred->lock);
 			continue;
 		}
 	}
@@ -165,7 +164,7 @@ int list_optcc_contains(int postId)
 int count_total_list_size(int expected)
 {
 	struct Node *tmp = linked_list->head->next;
-	int count;
+	int count = 0;
 
 	while (tmp != linked_list->tail)
 	{
@@ -179,7 +178,7 @@ int count_total_list_size(int expected)
 int count_total_keysum(int expected)
 {
 	struct Node *tmp = linked_list->head->next;
-	int count;
+	int count = 0;
 
 	while (tmp != linked_list->tail)
 	{

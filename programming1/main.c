@@ -14,6 +14,10 @@ void *publish(void *args)
 	int *id = (int *) args;
 	int i = 0;
 
+#if DEBUG
+	fprintf(stderr,  "%s | ID = %d \n", __func__, *id);
+#endif
+
 	for(i = 0; i < num_posts; i++)
 	{
 		list_optcc_add(*id + i * num_threads);
@@ -23,10 +27,10 @@ void *publish(void *args)
 
 	if (*id == 0)
 	{
-		printf("total list size counted(expected: %d, found: %d)", 
+		printf("total list size counted(expected: %d, found: %d)\n", 
 				expected_list_size(), count_total_list_size());
 
-		printf("total list size counted(expected: %d, found: %d)",
+		printf("total keysum counted(expected: %d, found: %d)\n",
 				expected_list_keysum(), count_total_keysum());
 	}
 
@@ -38,23 +42,23 @@ void *publish(void *args)
 //
 int main(int argc, char const* argv[])
 {
-	int check = 0;							   // Validation
-	int i;									   // Counter
-	pthread_t threads[num_threads];			   // Array of threads
-	
 	// Initialize number of threads and number of posts
-	num_threads = atoi(argv[2]);               // Number of threads
-	num_posts = atoi(argv[4]);                 // Number of threads
+	num_posts = atoi(argv[2]);                 // Number of threads
+	num_threads = 2 * num_posts;              // Number of threads
+	pthread_t threads[num_threads];			   // Array of threads
 
-	check = list_optcc_init(num_posts);
-	assertf(check, "Initialization Error");
+	int i;									   // Counter
+	int id[num_threads];					   // Thread Ids
+
+	list_optcc_init(num_posts);
 
 	// Initialize barrier
 	pthread_barrier_init(&barrier_1st_phase_end, NULL, num_threads);
 
 	for (i = 0; i < num_threads; i++)
 	{
-		if (pthread_create(&threads[i], NULL, publish, (void *)&i) != 0)
+		id[i] = i;
+		if (pthread_create(&threads[i], NULL, publish, (void *)&id[i]) != 0)
 		{
 			fprintf(stderr, "Unable to create thread %d\n", i);
 		}
