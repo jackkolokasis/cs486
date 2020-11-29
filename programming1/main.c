@@ -61,6 +61,8 @@ void *blogging_system(void *args)
 		{
 			verify_total_queue_size(8 * num_posts);
 			verify_total_queue_keysum((2 * pow(num_posts, 4)) - pow(num_posts, 2));
+
+			verify_total_list_size(0);
 		}
 	}
 
