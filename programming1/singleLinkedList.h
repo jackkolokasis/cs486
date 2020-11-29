@@ -19,18 +19,14 @@ struct single_linked_l
 };
 
 extern struct single_linked_l *linked_list;
-int total_nodes;			    // Expected toal nodes
-int total_keysum;		        // Expected total keysum
 
-int list_optcc_init(int num_posts);
+void list_optcc_init(int num_posts);
 int list_optcc_add(int postId);
 int list_optcc_contains(int postId);
 int list_optcc_remove(int postId);
 
 // Statistics
-int count_total_list_size();
-int count_total_keysum();
-int expected_list_size();
-int expected_list_keysum();
+void verify_total_list_size(int expect_val);
+void verify_total_list_keysum(int expect_val);
 
 #endif

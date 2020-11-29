@@ -1,7 +1,7 @@
 #include <math.h>
 #include <limits.h>
-#include "singleLinkedList.h"
 #include "sharedDefines.h"
+#include "singleLinkedList.h"
 
 struct single_linked_l *linked_list = NULL;
 
@@ -19,7 +19,7 @@ int validate(struct Node *pred, struct Node *curr)
 	return 0;
 }
 
-int list_optcc_init(int num_posts)
+void list_optcc_init(int num_posts)
 {
 	// Allocate memory
 	linked_list = malloc(sizeof(struct single_linked_l));
@@ -33,11 +33,6 @@ int list_optcc_init(int num_posts)
 	// Init tail node
 	linked_list->tail->postId = INT_MAX;
 	linked_list->tail->next = NULL;
-
-	total_nodes = 2 * pow(num_posts, 2);
-	total_keysum = (2 * pow(num_posts, 4)) - pow(num_posts, 2);
-
-	return 1;
 }
 
 int list_optcc_remove(int postId)
@@ -61,19 +56,19 @@ int list_optcc_remove(int postId)
 			if (curr->postId == postId)
 			{
 				pred->next = curr->next;
-				pthread_mutex_unlock(&pred->lock);
 				pthread_mutex_unlock(&curr->lock);
+				pthread_mutex_unlock(&pred->lock);
 				return postId;
 			}
 
-			pthread_mutex_unlock(&pred->lock);
 			pthread_mutex_unlock(&curr->lock);
+			pthread_mutex_unlock(&pred->lock);
 			return INVALID;
 		}
 		else 
 		{
-			pthread_mutex_unlock(&pred->lock);
 			pthread_mutex_unlock(&curr->lock);
+			pthread_mutex_unlock(&pred->lock);
 			continue;
 		}
 	}
@@ -161,7 +156,7 @@ int list_optcc_contains(int postId)
 	}
 }
 
-int count_total_list_size(int expected)
+void verify_total_list_size(int expect_val)
 {
 	struct Node *tmp = linked_list->head->next;
 	int count = 0;
@@ -171,11 +166,12 @@ int count_total_list_size(int expected)
 		count++;
 		tmp = tmp->next;
 	}
-
-	return count;
+		
+	printf("Total list size counted(expected: %d, found: %d)\n", 
+				expect_val, count);
 }
 
-int count_total_keysum(int expected)
+void verify_total_list_keysum(int expect_val)
 {
 	struct Node *tmp = linked_list->head->next;
 	int count = 0;
@@ -186,15 +182,6 @@ int count_total_keysum(int expected)
 		tmp = tmp->next;
 	}
 
-	return count;
-}
-
-int expected_list_size()
-{
-	return total_nodes;
-}
-
-int expected_list_keysum()
-{
-	return total_keysum;
+	printf("Total keysum counted(expected: %d, found: %d)\n",
+			expect_val, count);
 }

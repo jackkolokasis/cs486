@@ -18,7 +18,7 @@ unboundedLockFreeQueue.o: unboundedLockFreeQueue.c
 	$(CC) $(CFLAGS) -c $< $(LDFLAGS)
 
 run:
-	./phase1 -n 2 > err 2>&1 > out
+	./phase1 -n 4 > err 2>&1 > out
 
 clean:
 	$(RM) *.o err out
