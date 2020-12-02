@@ -158,7 +158,7 @@ void threaded_bs_tree_insert(int postId)
 int threaded_bs_tree_search(int postId)
 {
 	struct treeNode *tmp = root;
-	struct treeNode *find;
+	struct treeNode *find = NULL;
 
 	while (tmp != NULL)
 	{

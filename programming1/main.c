@@ -98,9 +98,14 @@ void *blogging_system(void *args)
 		{
 			if (threaded_bs_tree_search(*id + i * num_publishers))
 			{
-				printf("FIND = %d \n", *id + i * num_publishers);
-			//	delete
-			//	enqueue
+				//delete
+			  queue_lock_free_enq(*id, *id + i * num_publishers);
+			}
+
+			if (threaded_bs_tree_search(*id + i * num_publishers + num_posts))
+			{
+				//delete
+			  queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
 			}
 		}
 	}
@@ -111,7 +116,7 @@ void *blogging_system(void *args)
 	{
 		//verify_total_tree_size(0);
 		verify_total_queue_size(8 * num_posts);
-		verify_total_queue_keysum(2 * pow(num_posts, 4) - pow(num_posts, 2));
+		verify_total_queue_keysum((2 * pow(num_posts, 4)) - pow(num_posts, 2));
 	}
 
 	return NULL;
