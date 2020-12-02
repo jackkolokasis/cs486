@@ -19,6 +19,8 @@ extern struct treeNode *sentinel;
 
 void threaded_bs_tree_init();
 void threaded_bs_tree_insert(int postId);
+void threaded_bs_tree_remove(int postId);
+int threaded_bs_tree_search(int postId);
 
 // Statistics
 void verify_total_tree_size(int expect_val);

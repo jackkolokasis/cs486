@@ -92,6 +92,28 @@ void *blogging_system(void *args)
 
 	pthread_barrier_wait(&barrier_4th_phase_start);
 
+	if (*id >=0 && *id < num_admins)
+	{
+		for (i = 0; i < num_posts; i++)
+		{
+			if (threaded_bs_tree_search(*id + i * num_publishers))
+			{
+				printf("FIND = %d \n", *id + i * num_publishers);
+			//	delete
+			//	enqueue
+			}
+		}
+	}
+	
+	pthread_barrier_wait(&barrier_4th_phase_end);
+
+	if (*id == 0)
+	{
+		//verify_total_tree_size(0);
+		verify_total_queue_size(8 * num_posts);
+		verify_total_queue_keysum(2 * pow(num_posts, 4) - pow(num_posts, 2));
+	}
+
 	return NULL;
 }
 
@@ -154,6 +176,9 @@ int main(int argc, char const* argv[])
 	pthread_barrier_destroy(&barrier_1st_phase_end);
 	pthread_barrier_destroy(&barrier_2nd_phase_end);
 	pthread_barrier_destroy(&barrier_3rd_phase_start);
+	pthread_barrier_destroy(&barrier_3rd_phase_end);
+	pthread_barrier_destroy(&barrier_4th_phase_start);
+	pthread_barrier_destroy(&barrier_4th_phase_end);
 
 	return 0; 
 }

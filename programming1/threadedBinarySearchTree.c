@@ -22,17 +22,34 @@ void threaded_bs_tree_init()
 	root = sentinel;
 }
 
-static int validate(struct treeNode *pred, struct treeNode *curr)
+static int validate(struct treeNode *pred, struct treeNode *curr, int side)
 {
-	if (curr == NULL)
+	if (side)
 	{
-		return !pred->marked;
+		if (curr == NULL)
+		{
+			return !pred->marked && (pred->lc == NULL);
+		}
+		else 
+		{
+			return (!pred->marked && 
+					!curr->marked &&
+					(pred->lc == curr));
+		}
 	}
-	else 
+	else
 	{
-		return (!pred->marked && 
-				!curr->marked &&
-				(pred->lc == curr || pred->rc == curr));
+		if (curr == NULL)
+		{
+			return !pred->marked && pred->rc == NULL;
+		}
+		else 
+		{
+			return (!pred->marked && 
+					!curr->marked &&
+					(pred->rc == curr));
+		}
+
 	}
 }
 
@@ -44,6 +61,7 @@ void threaded_bs_tree_insert(int postId)
 		struct treeNode *par = root;
 		struct treeNode *child = NULL;
 		struct treeNode *node = NULL;
+		int side;
 
 		while (ptr != NULL)
 		{
@@ -52,6 +70,7 @@ void threaded_bs_tree_insert(int postId)
 
 			if (postId < ptr->postId)         //Left subtree
 			{
+				side = 1;
 				if (!ptr->is_left_threaded)
 				{
 					ptr = ptr->lc;
@@ -64,6 +83,7 @@ void threaded_bs_tree_insert(int postId)
 			}
 			else							 // Right subtree 
 			{
+				side = 0;
 				if (!ptr->is_right_threaded)
 				{
 					ptr = ptr->rc;
@@ -78,30 +98,12 @@ void threaded_bs_tree_insert(int postId)
 
 		pthread_mutex_lock(&par->lock);
 
-		if (par == sentinel)
-		{
-			// Create new node
-			node = malloc(sizeof(struct treeNode));
-			node->marked = 0;
-			node->postId = postId;
-			node->is_left_threaded = 1;
-			node->is_right_threaded = 1;
-
-			root->lc = node;
-			root->rc = node;
-			node->lc = NULL;
-			node->rc = NULL;
-
-			pthread_mutex_unlock(&par->lock);
-			return;
-		}
-
 		if (child != NULL)
 		{
 			pthread_mutex_lock(&child->lock);
 		}
 
-		if (validate(par, child))
+		if (validate(par, child, side))
 		{
 			// Create new node
 			node = malloc(sizeof(struct treeNode));
@@ -110,7 +112,14 @@ void threaded_bs_tree_insert(int postId)
 			node->is_left_threaded = 1;
 			node->is_right_threaded = 1;
 
-			if (postId < (par->postId))
+			if (par == sentinel)
+			{
+				root->lc = node;
+				root->rc = node;
+				node->lc = NULL;
+				node->rc = NULL;
+			} 
+			else if (postId < (par->postId))
 			{
 				node->lc = par->lc;
 				node->rc = par;
@@ -125,24 +134,68 @@ void threaded_bs_tree_insert(int postId)
 				par->rc = node;
 			}
 
+			pthread_mutex_unlock(&par->lock);
+
 			if (child != NULL)
 			{
 				pthread_mutex_unlock(&child->lock);
 			}
-			pthread_mutex_unlock(&par->lock);
 
 			break;
 		}
 		else 
 		{
+			pthread_mutex_unlock(&par->lock);
 			if (child != NULL)
 			{
 				pthread_mutex_unlock(&child->lock);
 			}
-			pthread_mutex_unlock(&par->lock);
 			continue;
 		}
 	}
+}
+
+int threaded_bs_tree_search(int postId)
+{
+	struct treeNode *tmp = root;
+	struct treeNode *find;
+
+	while (tmp != NULL)
+	{
+		if (postId == tmp->postId)
+		{
+			find = tmp;
+			break;
+		}
+
+		if (postId < tmp->postId)
+		{
+			if (!tmp->is_left_threaded)
+			{
+				tmp = tmp->lc;
+			}
+			else {
+				break;
+			}
+		}
+		else 
+		{
+			if (!tmp->is_right_threaded)
+			{
+				tmp = tmp->rc;
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+	return find != NULL && !find->marked;
+}
+
+void threaded_bs_tree_remove(int postId)
+{
+
 }
 
 struct treeNode *inorder_successor(struct treeNode *ptr)
@@ -188,4 +241,6 @@ void verify_total_tree_size(int expect_val)
 
 	printf("Tree total size finished (expected: %d , found: %d)\n",
 			expect_val, count);
+
+	assertf(expect_val == count, "Error %d - %d", expect_val, count);
 }
