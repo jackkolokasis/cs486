@@ -8,7 +8,7 @@ TARGET 	= phase1
 
 all: phase1
 
-phase1: singleLinkedList.o unboundedLockFreeQueue.o main.c
+phase1: singleLinkedList.o unboundedLockFreeQueue.o threadedBinarySearchTree.o main.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 singleLinkedList.o: singleLinkedList.c
@@ -17,8 +17,11 @@ singleLinkedList.o: singleLinkedList.c
 unboundedLockFreeQueue.o: unboundedLockFreeQueue.c
 	$(CC) $(CFLAGS) -c $< $(LDFLAGS)
 
+threadedBinarySearchTree.o: threadedBinarySearchTree.c
+	$(CC) $(CFLAGS) -c $< $(LDFLAGS)
+
 run:
-	./phase1 -n 16 > err 2>&1 > out
+	./phase1 -n 4 > err 2>&1 > out
 
 clean:
 	$(RM) *.o err out

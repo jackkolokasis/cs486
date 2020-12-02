@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
+#include "sharedDefines.h"
 #include "unboundedLockFreeQueue.h"
 
 struct categories *categories = NULL;
@@ -103,6 +104,8 @@ int queue_lock_free_deq(int tid)
 			}
 		}
 	}
+
+	free(first);
 	return postId;
 }
 
@@ -115,16 +118,10 @@ void verify_total_queue_size(int expect_val)
 	for (i = 0; i < arr_size; i++)
 	{
 		count = 0;
-		tmp = categories[i].lock_queue->head;
+		tmp = categories[i].lock_queue->head->next;
 
 		while (tmp != NULL)
 		{
-			if (tmp->postId == INT_MIN)
-			{
-				tmp = tmp->next;
-				continue;
-			}
-
 			count++;
 			tmp = tmp->next;
 		}
@@ -143,17 +140,11 @@ void verify_total_queue_keysum(int expect_val)
 	// Traverse the array
 	for (i = 0; i < arr_size; i++)
 	{
-		tmp = categories[i].lock_queue->head;
+		tmp = categories[i].lock_queue->head->next;
 
 		// Traverse the queue elements
 		while (tmp != NULL)
 		{
-			if (tmp->postId == INT_MIN)
-			{
-				tmp = tmp->next;
-				continue;
-			}
-
 			keysum += tmp->postId;
 			tmp = tmp->next; }
 	}

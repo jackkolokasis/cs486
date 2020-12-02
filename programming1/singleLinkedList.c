@@ -5,7 +5,7 @@
 
 struct single_linked_l *linked_list = NULL;
 
-int validate(struct Node *pred, struct Node *curr) 
+static int validate(struct Node *pred, struct Node *curr) 
 {
 	struct Node *node = linked_list->head;
 
