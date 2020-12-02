@@ -15,6 +15,7 @@ struct treeNode
 };
 
 extern struct treeNode *root;
+extern struct treeNode *sentinel;
 
 void threaded_bs_tree_init();
 void threaded_bs_tree_insert(int postId);
