@@ -1,5 +1,5 @@
 CC 		= gcc
-CFLAGS 	= -g -Wall
+CFLAGS 	= -g -Wall -ggdb3
 LDFLAGS = -lpthread -lm
 RM 		= rm -rf
 TARGET 	= phase1

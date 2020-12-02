@@ -92,25 +92,52 @@ void *blogging_system(void *args)
 
 	pthread_barrier_wait(&barrier_4th_phase_start);
 
-	if (*id >=0 && *id < num_admins)
+
+	if (*id == 1 )
 	{
 		for (i = 0; i < num_posts; i++)
 		{
 			if (threaded_bs_tree_search(*id + i * num_publishers))
 			{
-				//delete
-			  queue_lock_free_enq(*id, *id + i * num_publishers);
+				threaded_bs_tree_remove(*id + i * num_publishers);
+				printf("Remove: %d\n", *id + i * num_publishers);
+				//queue_lock_free_enq(*id, *id + i * num_publishers);
 			}
 
 			if (threaded_bs_tree_search(*id + i * num_publishers + num_posts))
 			{
-				//delete
-			  queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
+				threaded_bs_tree_remove(*id + i * num_publishers + num_posts);
+				printf("Remove: %d\n", *id + i * num_publishers + num_posts);
+				//queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
 			}
 		}
 	}
 	
 	pthread_barrier_wait(&barrier_4th_phase_end);
+	if (*id == 4 )
+	{
+		verify_total_tree_size(pow(num_posts, 2));
+
+		for (i = 0; i < num_posts; i++)
+		{
+			if (threaded_bs_tree_search(*id + i * num_publishers))
+			{
+				threaded_bs_tree_remove(*id + i * num_publishers);
+				printf("Remove: %d\n", *id + i * num_publishers);
+				//queue_lock_free_enq(*id, *id + i * num_publishers);
+			}
+
+			if (threaded_bs_tree_search(*id + i * num_publishers + num_posts))
+			{
+				threaded_bs_tree_remove(*id + i * num_publishers + num_posts);
+				printf("Remove: %d\n", *id + i * num_publishers + num_posts);
+				//queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
+			}
+		}
+	}
+	
+	pthread_barrier_wait(&barrier_4th_phase_end);
+	
 
 	if (*id == 0)
 	{
