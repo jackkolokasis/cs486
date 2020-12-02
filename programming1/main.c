@@ -40,8 +40,8 @@ void *blogging_system(void *args)
 	if (*id == 0)
 	{
 		verify_total_list_size(2 * pow(num_posts, 2));
-
 		verify_total_list_keysum((2 * pow(num_posts, 4)) - pow(num_posts, 2));
+		printf("\n");
 	}
 	
 	pthread_barrier_wait(&barrier_1st_phase_end);
@@ -67,6 +67,7 @@ void *blogging_system(void *args)
 			verify_total_queue_size(8 * num_posts);
 			verify_total_queue_keysum((2 * pow(num_posts, 4)) - pow(num_posts, 2));
 			verify_total_list_size(0);
+			printf("\n");
 		}
 	}
 
@@ -88,24 +89,26 @@ void *blogging_system(void *args)
 	{
 		verify_total_tree_size(pow(num_posts, 2));
 		verify_total_queue_size(4 * num_posts);
+		printf("\n");
 	}
 
 	pthread_barrier_wait(&barrier_4th_phase_start);
 
-	if (*id >=0 && *id < num_admins)
+
+	if (*id >= 0 && *id < num_posts)
 	{
 		for (i = 0; i < num_posts; i++)
 		{
 			if (threaded_bs_tree_search(*id + i * num_publishers))
 			{
-				//delete
-			  queue_lock_free_enq(*id, *id + i * num_publishers);
+				threaded_bs_tree_remove(*id + i * num_publishers);
+				queue_lock_free_enq(*id, *id + i * num_publishers);
 			}
 
 			if (threaded_bs_tree_search(*id + i * num_publishers + num_posts))
 			{
-				//delete
-			  queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
+				threaded_bs_tree_remove(*id + i * num_publishers + num_posts);
+				queue_lock_free_enq(*id, *id + i * num_publishers + num_posts);
 			}
 		}
 	}
@@ -180,8 +183,10 @@ int main(int argc, char const* argv[])
 
 	pthread_barrier_destroy(&barrier_1st_phase_end);
 	pthread_barrier_destroy(&barrier_2nd_phase_end);
+
 	pthread_barrier_destroy(&barrier_3rd_phase_start);
 	pthread_barrier_destroy(&barrier_3rd_phase_end);
+
 	pthread_barrier_destroy(&barrier_4th_phase_start);
 	pthread_barrier_destroy(&barrier_4th_phase_end);
 

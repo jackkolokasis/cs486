@@ -14,5 +14,4 @@
 
 #define INVALID -325 // Invalid value
 
-
 #endif
