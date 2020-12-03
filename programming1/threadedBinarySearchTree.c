@@ -105,12 +105,6 @@ static void has_no_children(struct treeNode *par, struct treeNode *find)
 		pthread_mutex_lock(&par->lock);
 		pthread_mutex_lock(&find->lock);
 
-		if (flag)
-		{
-			pthread_mutex_lock(&find->lock);
-			find->postId = succ->postId;
-			pthread_mutex_unlock(&find->lock);
-		}
 		if (par->lc == find)
 		{
 			side = 1;
@@ -149,7 +143,7 @@ static void has_no_children(struct treeNode *par, struct treeNode *find)
 		pthread_mutex_unlock(&par->lock);
 }
 
-static void has_one_children(struct treeNode *par, struct treeNode *find, int flag)
+static void has_one_children(struct treeNode *par, struct treeNode *find)
 {
 	struct treeNode *child;
 	struct treeNode *succ;
@@ -160,13 +154,6 @@ static void has_one_children(struct treeNode *par, struct treeNode *find, int fl
 	{
 			pthread_mutex_lock(&par->lock);
 			pthread_mutex_lock(&find->lock);
-
-			if (flag)
-			{
-				pthread_mutex_lock(&find->lock);
-				find->postId = succ->postId;
-				pthread_mutex_unlock(&find->lock);
-			}
 
 		if (par->lc == find)
 		{
@@ -246,13 +233,16 @@ static void has_two_children(struct treeNode *par, struct treeNode *find)
 		succ = succ->lc;
 	}
 
+	pthread_mutex_lock(&find->lock);
+	find->postId = succ->postId;
+	pthread_mutex_unlock(&find->lock);
 
 	if (succ->is_left_threaded && succ->is_right_threaded)
 	{
-		has_no_children(par_succ, succ, 1);
+		has_no_children(par_succ, succ);
 	}
 	else {
-		has_one_children(par_succ, succ, 1);
+		has_one_children(par_succ, succ);
 	}
 
 }
