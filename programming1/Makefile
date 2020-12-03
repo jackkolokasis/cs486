@@ -21,7 +21,7 @@ threadedBinarySearchTree.o: threadedBinarySearchTree.c
 	$(CC) $(CFLAGS) -c $< $(LDFLAGS)
 
 run:
-	./phase1 -n 4 > err 2>&1 > out
+	./phase1 -n 16 > err 2>&1 > out
 
 clean:
 	$(RM) *.o err out

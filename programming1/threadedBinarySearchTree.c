@@ -57,6 +57,10 @@ static struct treeNode * in_succ(struct treeNode *node)
 {
 	if (node->is_right_threaded)
 	{
+		if (node->rc != NULL)
+		{
+			assertf(node->rc->marked != 1, "Error");
+		}
 		return node->rc;
 	}
 
@@ -67,6 +71,7 @@ static struct treeNode * in_succ(struct treeNode *node)
 		node = node->lc;
 	}
 
+	assertf(node->marked != 1, "Error");
 	return node;
 }
 
@@ -74,6 +79,10 @@ static struct treeNode * in_pred(struct treeNode *node)
 {
 	if (node->is_left_threaded)
 	{
+		if (node->lc != NULL)
+		{
+			assertf(node->lc->marked != 1, "Error");
+		}
 		return node->lc;
 	}
 
@@ -84,29 +93,54 @@ static struct treeNode * in_pred(struct treeNode *node)
 		node = node->rc;
 	}
 
-	assertf(node != NULL, "Error");
-
+	assertf(node->marked != 1, "Error");
 	return node;
 }
 
 static void has_no_children(struct treeNode *par, struct treeNode *find)
 {
-	if (par == sentinel)
+	int side = 0;
+	while (1)
 	{
-		root->lc = NULL;
-		root->rc = NULL;
-	}
+		pthread_mutex_lock(&par->lock);
+		pthread_mutex_lock(&find->lock);
 
-	else if (find == par->lc)
-	{
-		par->is_left_threaded = 1;
-		par->lc = find->lc;
+		if (par->lc == find)
+		{
+			side = 1;
+		}
+		else 
+		{
+			side = 0;
+		}
+
+		if (validate(par, find, side))
+		{
+			find->marked = 1;
+			if (par == sentinel)
+			{
+				par->lc = NULL;
+				par->rc = NULL;
+			}
+
+			else if (find == par->lc)
+			{
+				par->is_left_threaded = 1;
+				par->lc = find->lc;
+			}
+			else
+			{
+				par->is_right_threaded = 1;
+				par->rc = find->rc;
+			}
+			break;
+		}
+
+			pthread_mutex_unlock(&find->lock);
+			pthread_mutex_unlock(&par->lock);
 	}
-	else
-	{
-		par->is_right_threaded = 1;
-		par->rc = find->rc;
-	}
+		pthread_mutex_unlock(&find->lock);
+		pthread_mutex_unlock(&par->lock);
 }
 
 static void has_one_children(struct treeNode *par, struct treeNode *find)
@@ -118,25 +152,29 @@ static void has_one_children(struct treeNode *par, struct treeNode *find)
 
 	while(1)
 	{
-		if (!find->is_left_threaded)
+			pthread_mutex_lock(&par->lock);
+			pthread_mutex_lock(&find->lock);
+
+		if (par->lc == find)
 		{
 			side = 1;
-			child = find->lc;
 		}
 		else
-		{
 			side = 0;
-			child = find->rc;
-		}
 
-		if (child != NULL)
-		{
-			pthread_mutex_lock(&child->lock);
-		}
-
-		if (validate(find, child, side))
+		fprintf(stderr, "ONE CHILDREN \n");
+		if (validate(par, find, side))
 		{
 			find->marked = 1;
+
+			if (!find->is_left_threaded)
+			{
+				child = find->lc;
+			}
+			else
+			{
+				child = find->rc;
+			}
 
 			if (par == sentinel)
 			{
@@ -156,38 +194,27 @@ static void has_one_children(struct treeNode *par, struct treeNode *find)
 			succ = in_succ(find);
 			pred = in_pred(find);
 
-			if (succ)
-			{
-				pthread_mutex_lock(&succ->lock);
-			}
-			if (pred)
-			{
-				pthread_mutex_lock(&pred->lock);
-			}
-
 			if (!find->is_left_threaded)
 			{
 				pred->rc = succ;
 			}
-			else if (!find->is_right_threaded)
+			else 
 			{
-				succ->lc = pred;
+				if (!find->is_right_threaded)
+				{
+					succ->lc = pred;
+				}
 			}
-
 			break;
+			
 		}
 
-		if (child != NULL)
-			pthread_mutex_unlock(&child->lock);
+			pthread_mutex_unlock(&find->lock);
+			pthread_mutex_unlock(&par->lock);
 	}
-	if (pred)
-		pthread_mutex_unlock(&pred->lock);
 
-	if (succ)
-		pthread_mutex_unlock(&succ->lock);
-
-	if (child != NULL)
-		pthread_mutex_unlock(&child->lock);
+		pthread_mutex_unlock(&find->lock);
+		pthread_mutex_unlock(&par->lock);
 }
 
 static void has_two_children(struct treeNode *par, struct treeNode *find)
@@ -195,41 +222,30 @@ static void has_two_children(struct treeNode *par, struct treeNode *find)
 	struct treeNode *par_succ;
 	struct treeNode *succ;
 
-	while(1)
+	pthread_mutex_lock(&find->lock);
+
+	// We have to find the inorder successor and its parent
+	par_succ = find;
+	succ = find->rc;
+
+	while (succ->lc != NULL)
 	{
-		// We have to find the inorder successor and its parent
-		par_succ = find;
-		succ = find->rc;
-
-		while (succ->lc != NULL)
-		{
-			par_succ = succ;
-			succ = succ->lc;
-		}
-
-		pthread_mutex_lock(&par_succ->lock);
-		pthread_mutex_lock(&succ->lock);
-
-		if (validate(par_succ, succ, 1))
-		{
-			find->postId = succ->postId;
-
-			if (succ->is_left_threaded && succ->is_right_threaded)
-			{
-				succ->marked = 1;
-				has_no_children(par_succ, succ);
-			}
-			else {
-				has_one_children(par_succ, succ);
-			}
-
-			break;
-		}
-		pthread_mutex_unlock(&succ->lock);
-		pthread_mutex_unlock(&par_succ->lock);
+		par_succ = succ;
+		succ = succ->lc;
 	}
-	pthread_mutex_unlock(&succ->lock);
-	pthread_mutex_unlock(&par_succ->lock);
+
+	find->postId = succ->postId;
+	find->marked = succ->marked;
+	pthread_mutex_unlock(&find->lock);
+
+	if (succ->is_left_threaded && succ->is_right_threaded)
+	{
+		has_no_children(par_succ, succ);
+	}
+	else {
+		has_one_children(par_succ, succ);
+	}
+
 }
 
 void threaded_bs_tree_insert(int postId)
@@ -339,10 +355,6 @@ int threaded_bs_tree_search(int postId)
 	struct treeNode *tmp = root->lc;
 	struct treeNode *find = NULL;
 
-	printf("===================================\n");
-	printf("POST ID = %d\n", postId);
-	printf("===================================\n");
-
 	while (tmp != NULL)
 	{
 		if (postId == tmp->postId)
@@ -371,14 +383,8 @@ int threaded_bs_tree_search(int postId)
 				break;
 			}
 		}
-		printf("TMP = %d\n", tmp->postId);
 	}
 
-	if (find != NULL)
-	{
-		printf ("FIND = %d | %d | %d \n", find->postId, find->marked, postId);
-	}
-	printf("===================================\n");
 	return find != NULL && !find->marked;
 }
 
@@ -430,19 +436,16 @@ void threaded_bs_tree_remove(int postId)
 	// Case: one children
 	else if (!find->is_left_threaded)
 	{
-		find->marked = 1;
 		has_one_children(par, find);
 
 	}
 	// Case: one children
 	else if (!find->is_right_threaded)
 	{
-		find->marked = 1;
 		has_one_children(par, find);
 	}
 	// Case: No children
 	else {
-		find->marked = 1;
 		has_no_children(par, find);
 	}
 }
@@ -485,13 +488,10 @@ void verify_total_tree_size(int expect_val)
 	while (ptr != NULL)
 	{
 		count++;
-		printf("%d \n", ptr->postId);
 		ptr = inorder_successor(ptr);
 	}
 
 	printf("Tree total size finished (expected: %d , found: %d)\n",
 			expect_val, count);
-
-	//assertf(expect_val == count, "Error %d - %d", expect_val, count);
 }
 
