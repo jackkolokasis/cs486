@@ -2,14 +2,17 @@ MPICC = mpicc
 CFLAGS = -g
 MPIRUN = mpirun
 EXECS = warehouse
-NUM_PROCESS = 4
+NUM_PROCESS = 5
 HOSTFILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
 IN_FILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
 
 all: $(EXECS)
 
-warehouse: main.c
-	$(MPICC) $(CFLAGS) -o $@ $<
+warehouse: server.o main.c
+	$(MPICC) $(CFLAGS) -o $@ $^
+
+server.o: server.c
+	$(MPICC) $(CFLAGS) -c $< 
 
 run:
 	#$(MPIRUN) -np $(NUM_PROCESS) --hostfile $(HOSTFILE) $(EXECS) $(NUMSERVERS)
