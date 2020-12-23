@@ -14,6 +14,13 @@ int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE];      		// Buffer for each line
 	char event[SIZE];					// Task
 	FILE *fp;							// File pointer
+	int msg[2];				            // Message to the server process
+										// msg[0] = left server
+										// msg[1] = right server
+    char ack[5];	        			// Ack 
+	int *servers;						// Servers Ids
+	int num_servers;					// Total number of servers
+	int i;
 
 	MPI_Status status;
 
@@ -36,6 +43,10 @@ int main(int argc, char** argv) {
 			return EXIT_FAILURE;
 		}
 
+		num_servers = atoi(argv[2]);
+		servers = malloc(num_servers * sizeof(int));
+		i = 0;
+
 		// Traverse the file line by line
 		while (fgets(buff, BUFFER_SIZE, fp)) {
 			// Get the first token of the line
@@ -45,19 +56,26 @@ int main(int argc, char** argv) {
 
 			if (strcmp(event, "SERVER") == 0) {
 				int s_rank;				// Server rank
-				int msg[2];				// Message to the server process
-										// msg[0] = left server
-										// msg[1] = right server
 
 				sscanf(buff, "%s %d %d %d", event, &s_rank, &msg[0], &msg[1]);
 				DPRINT("%s %d %d %d\n", event, s_rank, msg[0], msg[1]);
 
+				servers[i++] = s_rank;
 				MPI_Send(msg, 2, MPI_INT, s_rank, 0, MPI_COMM_WORLD);
+		
+				MPI_Recv(ack, 5, MPI_CHAR, s_rank, 0, MPI_COMM_WORLD, &status);
+				DPRINT(">>>> ACK\n");
 
 			}
 			else if (strcmp(event, "START_LEADER_ELECTION") == 0) {
 				sscanf(buff, "%s ", event);
 				DPRINT("%s\n", event);
+
+				//for (i = 0; i < num_servers; i++) {
+				//	//MPI_Send(msg, 2, MPI_INT, s_rank, 0, MPI_COMM_WORLD);
+
+				//}
+
 
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
@@ -110,13 +128,16 @@ int main(int argc, char** argv) {
 			}
 		} 
 	}
-	else if (world_rank > 0 && world_rank <= 4) {
-		int msg[2];
+	else {
 
 		MPI_Recv(msg, 2, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
 		printf("[SERVER] 0 -> %d | %d | %d \n", world_rank, msg[0], msg[1]);
 		server_init(world_rank, msg[0], msg[1]);
+		DPRINT(">>>> %d | %d | %d\n", world_rank, msg[0], msg[1]);
+
+		strcat(ack, "ack");
+		MPI_Send(ack, 5, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 	} 
 
 	// Wait all process to finish their work

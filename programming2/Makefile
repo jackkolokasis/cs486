@@ -16,7 +16,7 @@ server.o: server.c
 
 run:
 	#$(MPIRUN) -np $(NUM_PROCESS) --hostfile $(HOSTFILE) $(EXECS) $(NUMSERVERS)
-	$(MPIRUN) -np $(NUM_PROCESS) ./$(EXECS) $(IN_FILE) > err 2>&1 > out
+	$(MPIRUN) -np $(NUM_PROCESS) ./$(EXECS) $(IN_FILE) 4 > err 2>&1 > out
 
 clean:
 	rm $(EXECS)
