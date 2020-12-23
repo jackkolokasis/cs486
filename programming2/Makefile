@@ -8,7 +8,7 @@ IN_FILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
 
 all: $(EXECS)
 
-warehouse: server.o main.c
+warehouse: server.o main.c send_receive.c
 	$(MPICC) $(CFLAGS) -o $@ $^ -lm
 
 server.o: server.c
@@ -19,4 +19,4 @@ run:
 	$(MPIRUN) -np $(NUM_PROCESS) ./$(EXECS) $(IN_FILE) 4 > err 2>&1 > out
 
 clean:
-	rm $(EXECS) out err
+	rm $(EXECS) out err *.o

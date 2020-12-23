@@ -19,4 +19,46 @@
 #define DPRINT(...)
 #endif /* DEBUG */
 
+// +-----------------------+--------+
+// | EVENT TYPE:           | VALUE  |
+// +-----------------------+--------+
+// | SERVER				   |    1   |
+// | START_LEADER_ELECTION |    2   |
+// | CONNECT               |    3   |
+// | ORDER				   |    4   | 
+// | SUPPLY                |    5   | 
+// | PRINT                 |    6   |
+// | EXTERNAL SUPPLY       |    7   |
+// | REPORT                |    8   |
+// | PROB                  |    9   |
+// | REPLY                 |    10  |
+// | TERMINATE             |    11  |
+// +-----------------------+--------+
+#define SERVER				  1
+#define START_LEADER_ELECTION 2
+#define CONNECT               3
+#define ORDER				  4
+#define SUPPLY                5
+#define PRINT                 6
+#define EXTERNAL SUPPLY       7
+#define REPORT                8
+#define PROB                  9
+#define REPLY                 10
+#define TERMINATE             11
+#define ACK                   255
+#define EXIT                  425
+
+struct _msg {
+	int pid;			// Process Id 
+	int val_1;			// Value
+	int val_2;			// Value
+	int val_3;			// Value
+	int val_4;			// Value
+};
+
+void my_send(struct _msg *msg, int rank, int tag);
+void my_receive(struct _msg *msg);
+struct _msg prepare_msg(int pid, int val_1, int val_2, int val_3, int val_4);
+
+
 #endif

@@ -1,7 +1,6 @@
 #include "server.h"
-#include "sharedDefines.h"
 
-void server_init(int id, int l_id, int r_id) {
+void init_server(int id, int l_id, int r_id) {
 	server.s_rank = id;
 	server.l_rank = l_id;
 	server.r_rank = r_id;
@@ -55,7 +54,6 @@ void set_leader(int leader) {
 }
 
 int get_leader() {
-	assertf(server.l_found == 1, "Error");
 	return server.leader; 
 }
 

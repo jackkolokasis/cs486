@@ -19,7 +19,7 @@ struct _server {
 
 struct _server server;
 
-void server_init(int id, int l_id, int r_id);
+void init_server(int id, int l_id, int r_id);
 
 int server_id();
 
