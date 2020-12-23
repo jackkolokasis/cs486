@@ -7,6 +7,26 @@
 
 #define SIZE 128		  // Maximum length of the input file name
 #define BUFFER_SIZE 1024  // Maximum length of a line in input file
+#define MSG_SIZE 3		  // Message size
+
+// For the messages I use an int array.
+// Mapping of each event to message type
+// +-------+---------+---------+
+// | event | value 1 | value 2 |
+// +-------+---------+---------+
+//
+// +-----------------------+--------+
+// | EVENT TYPE:           | VALUE  |
+// +-----------------------+--------+
+// | SERVER				   |    1   |
+// | START_LEADER_ELECTION |    2   |
+// | CONNECT               |    3   |
+// | ORDER				   |    4   | 
+// | SUPPLY                |    5   | 
+// | PRINT                 |    6   |
+// | EXTERNAL SUPPLY       |    7   |
+// | REPORT                |    8   |
+// +-----------------------+--------+
 
 int main(int argc, char** argv) {
 	int world_size;						// Total number of process
@@ -14,10 +34,10 @@ int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE];      		// Buffer for each line
 	char event[SIZE];					// Task
 	FILE *fp;							// File pointer
-	int msg[2];				            // Message to the server process
+	int msg[MSG_SIZE];				            // Message to the server process
 										// msg[0] = left server
 										// msg[1] = right server
-    char ack[5];	        			// Ack 
+    char ack[SIZE];	        			// Ack 
 	int *servers;						// Servers Ids
 	int num_servers;					// Total number of servers
 	int i;
@@ -57,13 +77,16 @@ int main(int argc, char** argv) {
 			if (strcmp(event, "SERVER") == 0) {
 				int s_rank;				// Server rank
 
-				sscanf(buff, "%s %d %d %d", event, &s_rank, &msg[0], &msg[1]);
-				DPRINT("%s %d %d %d\n", event, s_rank, msg[0], msg[1]);
+				sscanf(buff, "%s %d %d %d", event, &s_rank, &msg[1], &msg[2]);
+				DPRINT("%s %d %d %d\n", event, s_rank, msg[1], msg[2]);
+
+				// Server message type
+				msg[0] = 1;
 
 				servers[i++] = s_rank;
-				MPI_Send(msg, 2, MPI_INT, s_rank, 0, MPI_COMM_WORLD);
+				MPI_Send(msg, MSG_SIZE, MPI_INT, s_rank, 0, MPI_COMM_WORLD);
 		
-				MPI_Recv(ack, 5, MPI_CHAR, s_rank, 0, MPI_COMM_WORLD, &status);
+				MPI_Recv(ack, SIZE, MPI_CHAR, s_rank, 0, MPI_COMM_WORLD, &status);
 				DPRINT(">>>> ACK\n");
 
 			}
@@ -71,12 +94,19 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s ", event);
 				DPRINT("%s\n", event);
 
+				for (i = 0; i < num_servers; i++) {
+
+					// Prepare message to send
+					msg[0] = 2;
+					msg[1] = 0;
+					msg[2] = 0;
+					
+					MPI_Send(msg, MSG_SIZE, MPI_INT, servers[i], 0, MPI_COMM_WORLD);
+				}
+				
 				//for (i = 0; i < num_servers; i++) {
-				//	//MPI_Send(msg, 2, MPI_INT, s_rank, 0, MPI_COMM_WORLD);
-
+				//	MPI_Recv(ack, SIZE, MPI_CHAR, servers[i], 0, MPI_COMM_WORLD, &status);
 				//}
-
-
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int c_rank;				// Client rank
@@ -129,16 +159,31 @@ int main(int argc, char** argv) {
 		} 
 	}
 	else {
+		while (1) {
+			MPI_Recv(msg, MSG_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
-		MPI_Recv(msg, 2, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+			printf("msg[0] = %d | msg[1] = %d | msg[2] = %d \n", msg[0], msg[1], msg[2]);
 
-		printf("[SERVER] 0 -> %d | %d | %d \n", world_rank, msg[0], msg[1]);
-		server_init(world_rank, msg[0], msg[1]);
-		DPRINT(">>>> %d | %d | %d\n", world_rank, msg[0], msg[1]);
+			switch (msg[0]) {
+				case 1: 
+					printf("[SERVER] 0 -> %d | %d | %d \n", world_rank, msg[0], msg[1]);
 
-		strcat(ack, "ack");
-		MPI_Send(ack, 5, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-	} 
+					server_init(world_rank, msg[1], msg[2]);
+					DPRINT(">>>> %d | %d | %d\n", world_rank, msg[0], msg[1]);
+
+					strcat(ack, "ack");
+					MPI_Send(ack, SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
+					break;
+				case 2:
+					printf("[LEADER ELECTION] 0 -> %d | %d\n", world_rank, msg[0]);
+
+					MPI_Send(ack, SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
+					break;
+			}
+		} 
+	}
 
 	// Wait all process to finish their work
 	MPI_Barrier(MPI_COMM_WORLD);
