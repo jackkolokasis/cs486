@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include "sharedDefines.h"
 #include <strings.h>
+#include <math.h>
 #include "server.h"
 
 #define SIZE 128		  // Maximum length of the input file name
 #define BUFFER_SIZE 1024  // Maximum length of a line in input file
-#define MSG_SIZE 3		  // Message size
+#define MSG_SIZE 5		  // Message size
 
 // For the messages I use an int array.
 // Mapping of each event to message type
@@ -26,6 +27,9 @@
 // | PRINT                 |    6   |
 // | EXTERNAL SUPPLY       |    7   |
 // | REPORT                |    8   |
+// | PROB                  |    9   |
+// | REPLY                 |    10  |
+// | TERMINATE             |    11  |
 // +-----------------------+--------+
 
 int main(int argc, char** argv) {
@@ -41,6 +45,7 @@ int main(int argc, char** argv) {
 	int *servers;						// Servers Ids
 	int num_servers;					// Total number of servers
 	int i;
+	int leader = 0;
 
 	MPI_Status status;
 
@@ -104,9 +109,9 @@ int main(int argc, char** argv) {
 					MPI_Send(msg, MSG_SIZE, MPI_INT, servers[i], 0, MPI_COMM_WORLD);
 				}
 				
-				//for (i = 0; i < num_servers; i++) {
-				//	MPI_Recv(ack, SIZE, MPI_CHAR, servers[i], 0, MPI_COMM_WORLD, &status);
-				//}
+				MPI_Recv(ack, SIZE, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+				DPRINT("%s\n", ack);
+
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int c_rank;				// Client rank
@@ -160,13 +165,14 @@ int main(int argc, char** argv) {
 	}
 	else {
 		while (1) {
-			MPI_Recv(msg, MSG_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+			MPI_Recv(msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
 
-			printf("msg[0] = %d | msg[1] = %d | msg[2] = %d \n", msg[0], msg[1], msg[2]);
+			DPRINT("msg[0] = %d | msg[1] = %d | msg[2] = %d \n", msg[0], msg[1], msg[2]);
+
 
 			switch (msg[0]) {
 				case 1: 
-					printf("[SERVER] 0 -> %d | %d | %d \n", world_rank, msg[0], msg[1]);
+					DPRINT("[SERVER] 0 -> %d | %d | %d \n", world_rank, msg[0], msg[1]);
 
 					server_init(world_rank, msg[1], msg[2]);
 					DPRINT(">>>> %d | %d | %d\n", world_rank, msg[0], msg[1]);
@@ -176,22 +182,130 @@ int main(int argc, char** argv) {
 
 					break;
 				case 2:
-					printf("[LEADER ELECTION] 0 -> %d | %d\n", world_rank, msg[0]);
+					DPRINT("[LEADER ELECTION] 0 -> %d | %d\n", world_rank, msg[0]);
+					if (is_server_asleep()) {
+						set_server_asleep(0);
 
-					MPI_Send(ack, SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+						msg[0] = 9; 
+						msg[1] = world_rank; 
+						msg[2] = world_rank; 
+						msg[3] = 0;
+						msg[4] = 1;
+
+						MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+						MPI_Send(msg, MSG_SIZE, MPI_CHAR, right_server_id(), 0, MPI_COMM_WORLD);
+					}
 
 					break;
-			}
-		} 
-	}
 
+				case 8:
+					break;
+
+				case 9:
+					DPRINT("[PROB] 9 -> %d | %d\n", world_rank, msg[0]);
+					int sender = msg[1];
+					int j = msg[2];
+					int k = msg[3];
+					int d = msg[4];
+
+					if (j == world_rank) {
+						msg[0] = 11;
+						msg[1] = world_rank;
+						msg[2] = 0;
+						msg[3] = 0;
+						msg[4] = 0;
+
+						MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+					}
+
+					if (j > world_rank && d < pow(2, k)) {
+						msg[0] = 9;
+						msg[1] = world_rank;
+						msg[2] = j;
+						msg[3] = k;
+						msg[4] = d + 1;
+
+						if (sender == left_server_id())
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, right_server_id(), 0, MPI_COMM_WORLD);
+						else
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+					}
+					
+					if (j > world_rank && d >= pow(2, k)) {
+						msg[0] = 10;
+						msg[1] = world_rank;
+						msg[2] = j;
+						msg[3] = k;
+						msg[4] = 0;
+
+						if (sender == left_server_id())
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, right_server_id(), 0, MPI_COMM_WORLD);
+						else
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+					}
+					break;
+
+				case 10:
+					sender = msg[1];
+					j = msg[2];
+					k = msg[3];
+
+					if (j != world_rank) {
+						msg[0] = 10;
+						msg[1] = world_rank;
+						msg[2] = j;
+						msg[3] = k;
+						msg[4] = k;
+
+						if (sender == left_server_id()) {
+							set_server_l_reply(1);
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, right_server_id(), 0, MPI_COMM_WORLD);
+						}
+						else {
+							set_server_r_reply(1);
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+						}
+					}
+					else {
+						if (is_server_l_reply() || is_server_r_reply()) {
+							msg[0] = 9;
+							msg[1] = world_rank;
+							msg[2] = world_rank;
+							msg[3] = k+1;
+							msg[4] = 1;
+
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+							MPI_Send(msg, MSG_SIZE, MPI_CHAR, right_server_id(), 0, MPI_COMM_WORLD);
+						}
+					}
+					break;
+
+				case 11:
+					leader = msg[1];
+
+					if (!has_leader()) {
+						msg[0] = 11;
+						msg[1] = leader;
+						msg[2] = 0;
+						msg[3] = 0;
+						msg[4] = 0;
+
+						set_leader(leader);
+						MPI_Send(msg, MSG_SIZE, MPI_CHAR, left_server_id(), 0, MPI_COMM_WORLD);
+					}
+					else {
+						strcpy(ack, "LEADER_ELECTION_DONE");
+						DPRINT("LEADER = %d\n", get_leader());
+						MPI_Send(ack, SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+					}
+					break;
+			}
+		}
+	}
 	// Wait all process to finish their work
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	// Cordinator process finilize the system
-	if (world_rank == 0)
-	{
-		// Finalize the MPI environment.
-		MPI_Finalize();
-	}
+	// Finalize the MPI environment.
+	MPI_Finalize();
+	return 0;
 }

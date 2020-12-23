@@ -1,4 +1,5 @@
 #include "server.h"
+#include "sharedDefines.h"
 
 void server_init(int id, int l_id, int r_id) {
 	server.s_rank = id;
@@ -6,6 +7,10 @@ void server_init(int id, int l_id, int r_id) {
 	server.r_rank = r_id;
 
 	server.asleep = 1;
+
+	server.l_reply = 0;
+	server.r_reply = 0;
+	server.l_found = 0;
 }
 
 int server_id() {
@@ -19,3 +24,43 @@ int left_server_id() {
 int right_server_id() {
 	return server.r_rank;
 }
+
+int is_server_asleep() {
+	return server.asleep;
+}
+
+void set_server_asleep(int val) {
+	server.asleep = val;
+}
+
+void set_server_l_reply(int val) {
+	server.l_reply = 1;
+}
+
+void set_server_r_reply(int val) {
+	server.r_reply = 1;
+}
+
+int is_server_l_reply() {
+	return server.l_reply;
+}
+
+int is_server_r_reply() {
+	return server.l_reply;
+}
+
+void set_leader(int leader) {
+	server.l_found = 1;
+	server.leader = leader;
+}
+
+int get_leader() {
+	assertf(server.l_found == 1, "Error");
+	return server.leader; 
+}
+
+int has_leader() {
+	return server.l_found;
+}
+
+
