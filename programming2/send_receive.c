@@ -194,14 +194,14 @@ void my_receive(struct _msg *msg, int rank) {
 
 
 			case LEADER:
-				if (!has_leader()) {
-					set_leader(rcv_msg.pid);
+				set_leader(rcv_msg.pid);
 
+				if (rank == rcv_msg.pid)
+					MPI_Send(&rcv_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				else {
 					MPI_Send(&rcv_msg.pid, 1, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
 				}
-				else {
-					MPI_Send(&rcv_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
-				}
+
 				break;
 
 			case EXIT:

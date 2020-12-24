@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
 				}
 					
 				MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+
 				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {

@@ -2,7 +2,7 @@ MPICC = mpicc
 CFLAGS = -g
 MPIRUN = mpirun
 EXECS = warehouse
-NUM_PROCESS = 20
+NUM_PROCESS = 10
 HOSTFILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
 IN_FILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
 
