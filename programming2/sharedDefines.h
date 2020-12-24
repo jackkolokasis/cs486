@@ -44,7 +44,7 @@
 #define REPORT                8
 #define PROB                  9
 #define REPLY                 10
-#define TERMINATE             11
+#define LEADER                11
 #define ACK                   255
 #define EXIT                  425
 
@@ -57,7 +57,7 @@ struct _msg {
 };
 
 void my_send(struct _msg *msg, int rank, int tag);
-void my_receive(struct _msg *msg);
+void my_receive(struct _msg *msg, int rank);
 struct _msg prepare_msg(int pid, int val_1, int val_2, int val_3, int val_4);
 
 

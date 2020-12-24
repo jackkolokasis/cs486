@@ -1,4 +1,5 @@
 #include "server.h"
+#include <stdio.h>
 
 void init_server(int id, int l_id, int r_id) {
 	server.s_rank = id;
@@ -32,11 +33,11 @@ void set_server_asleep(int val) {
 	server.asleep = val;
 }
 
-void set_server_l_reply(int val) {
+void set_server_l_reply() {
 	server.l_reply = 1;
 }
 
-void set_server_r_reply(int val) {
+void set_server_r_reply() {
 	server.r_reply = 1;
 }
 

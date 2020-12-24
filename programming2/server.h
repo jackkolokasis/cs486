@@ -29,11 +29,11 @@ int right_server_id();
 
 int is_server_asleep();
 
-void set_server_asleep(int val);
+void set_server_asleep();
 
-void set_server_l_reply(int val);
+void set_server_l_reply();
 
-void set_server_r_reply(int val);
+void set_server_r_reply();
 
 int is_server_l_reply();
 

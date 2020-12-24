@@ -72,9 +72,18 @@ int main(int argc, char** argv) {
 				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
 			}
 			else if (strcmp(event, "START_LEADER_ELECTION") == 0) {
-				sscanf(buff, "%s ", event);
 				DPRINT("%s\n", event);
+				sscanf(buff, "%s ", event);
 
+				for (i = 0; i < num_servers; i++) {
+					// Prepare Message
+					send_msg = prepare_msg(servers[i], 0, 0, 0, 0);
+
+					my_send(&send_msg, servers[i], START_LEADER_ELECTION);
+				}
+					
+				MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int c_rank;				// Client rank
@@ -127,7 +136,7 @@ int main(int argc, char** argv) {
 		} 
 	}
 	else {
-		my_receive(&rcv_msg);
+		my_receive(&rcv_msg, rank);
 	}
 
 	if (rank == 0)
