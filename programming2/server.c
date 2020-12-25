@@ -6,6 +6,8 @@ void init_server(int id, int l_id, int r_id) {
 	server.l_rank = l_id;
 	server.r_rank = r_id;
 
+	server.leader = -1;
+	server.is_leader = 0;
 	server.asleep = 1;
 
 	server.l_reply = 0;
@@ -33,12 +35,12 @@ void set_server_asleep(int val) {
 	server.asleep = val;
 }
 
-void set_server_l_reply() {
-	server.l_reply = 1;
+void set_server_l_reply(int val) {
+	server.l_reply = val;
 }
 
-void set_server_r_reply() {
-	server.r_reply = 1;
+void set_server_r_reply(int val) {
+	server.r_reply = val;
 }
 
 int is_server_l_reply() {
@@ -60,6 +62,16 @@ int get_leader() {
 
 int has_leader() {
 	return server.l_found;
+}
+
+int make_leader() {
+	server.is_leader = 1;
+
+}
+
+int is_leader() {
+	return server.is_leader;
+
 }
 
 

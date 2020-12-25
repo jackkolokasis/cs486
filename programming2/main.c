@@ -31,6 +31,9 @@ int main(int argc, char** argv) {
 
 	// Get the rank of the process
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		
+	// Number of servers
+	num_servers = atoi(argv[2]);
 
 	// Cordinator process
 	if (rank == 0) {
@@ -42,19 +45,16 @@ int main(int argc, char** argv) {
 			return EXIT_FAILURE;
 		}
 		
-		num_servers = atoi(argv[2]);
 		servers = malloc(num_servers * sizeof(int));
 		i = 0;
 
 		// Traverse the file line by line
 		while (fgets(buff, BUFFER_SIZE, fp)) {
-			// Get the first token of the line
-			
 			sscanf(buff, "%s", event);
 			DPRINT(">>>> %s\n", event);
 
 			if (strcmp(event, "SERVER") == 0) {
-				int s_rank;				// Server rank
+			    int s_rank;             // Server rank
 				int l_rank;				// Left Server rank
 				int r_rank;				// Right Server rank
 
@@ -83,15 +83,25 @@ int main(int argc, char** argv) {
 				}
 					
 				MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
-
+				
 				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
-				int c_rank;				// Client rank
-				int p_rank;				// Parent rank
+				int client_1;				// Client rank
+				int client_2;				// Parent rank
 
-				sscanf(buff, "%s %d %d", event, &c_rank, &p_rank);
-				DPRINT("%s %d %d\n", event, c_rank, p_rank);
+				sscanf(buff, "%s %d %d", event, &client_1, &client_2);
+				DPRINT("%s %d %d\n", event, client_1, client_2);
+
+
+				// Prepare message
+				//send_msg = prepare_msg(client_1, client_2, 0, 0, 0);
+
+				//my_send(&send_msg, client_1, CONNECT);
+				
+				//MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+
+				//DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
 
 
 			}
@@ -136,6 +146,10 @@ int main(int argc, char** argv) {
 			}
 		} 
 	}
+	else if (rank > 0 && rank <= num_servers){
+		my_receive(&rcv_msg, rank);
+	}
+
 	else {
 		my_receive(&rcv_msg, rank);
 	}

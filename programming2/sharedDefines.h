@@ -45,6 +45,7 @@
 #define PROB                  9
 #define REPLY                 10
 #define LEADER                11
+#define NEIGHBOR              12
 #define ACK                   255
 #define EXIT                  425
 
