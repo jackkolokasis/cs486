@@ -42,7 +42,7 @@ void my_send(int *msg, int rank, int tag) {
 
 // Process `rank` receive message `msg`. Based on the tag value perform the
 // following actions
-void my_receive(int *msg, int rank) {
+void my_receive(int *msg, int rank, int num_servers) {
 	MPI_Status status;				// Tag status
 
 	int rcv_msg[MSG_SIZE];			// Receive message
@@ -91,11 +91,15 @@ void my_receive(int *msg, int rank) {
 				dl = rcv_msg[2];
 
 				if (jl == rank) {
-					// Prepare msg
-					prepare_msg(send_msg, rank, 0, 0, 0 , 0, 0);
-					set_leader(rank);
-					make_leader();
-					MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					set_server_leader_l_reply(1);
+
+					if (is_server_leader_r_reply()) {
+						// Prepare msg
+						prepare_msg(send_msg, rank, 0, 0, 0 , 0, 0);
+						set_leader(rank);
+						make_leader();
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					}
 				}
 
 				if (jl > rank && dl < pow(2, kl)) { // forward the msg
@@ -120,11 +124,15 @@ void my_receive(int *msg, int rank) {
 				dr = rcv_msg[2];
 
 				if (jr == rank) {
-					// Prepare msg
-					prepare_msg(send_msg, rank, 0, 0, 0 ,0, 0);
-					set_leader(rank);
-					make_leader();
-					MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					set_server_leader_r_reply(1);
+
+					if (is_server_leader_l_reply()) {
+						// Prepare msg
+						prepare_msg(send_msg, rank, 0, 0, 0 ,0, 0);
+						set_leader(rank);
+						make_leader();
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					}
 				}
 
 				if (jr > rank && dr < pow(2, kr)) { // forward the msg
@@ -198,13 +206,12 @@ void my_receive(int *msg, int rank) {
 				break;
 
 			case LEADER:
-				set_leader(rcv_msg[0]);
-
 				if (is_leader()) {
-					prepare_msg(send_msg, get_leader(), 0, 0, 0, 0, 0);
+					prepare_msg(send_msg, rcv_msg[0], 0, 0, 0, 0, 0);
 					MPI_Send(send_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
 				}
 				else {
+					set_leader(rcv_msg[0]);
 					prepare_msg(send_msg_l, rcv_msg[0], 0, 0, 0, 0, 0);
 					MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
 				}
@@ -238,12 +245,18 @@ void my_receive(int *msg, int rank) {
 
 				DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
 
-				if (!client_alive())
-					// Create new client - client1
-					new_client(client2);
+				if (client2 <= num_servers) {
+					add_server_child(client1);
+				}
+				else {
 
-				// Add client1 to the list of neighbors of client2
-				insert_nbr_client(client1);
+					if (!client_alive())
+						// Create new client - client1
+						new_client(client2);
+
+					// Add client1 to the list of neighbors of client2
+					insert_nbr_client(client1);
+				}
 
 				// Prepare ack message
 				prepare_msg(send_msg, client1, client2, 0, 0, 0, 0); 
@@ -261,7 +274,9 @@ void my_receive(int *msg, int rank) {
 				break;
 
 			case EXIT:
-				if (rank > 4)
+				if (rank <= num_servers)
+					print_server();
+				else if (rank > num_servers)
 					print_client();
 
 				return;

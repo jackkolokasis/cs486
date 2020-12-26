@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 				
-				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
+				DPRINT(">>> [ACK LEADER] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int client_1;				// Client rank
@@ -146,11 +146,11 @@ int main(int argc, char** argv) {
 		} 
 	}
 	else if (rank > 0 && rank <= num_servers){
-		my_receive(rcv_msg, rank);
+		my_receive(rcv_msg, rank, num_servers);
 	}
 
 	else {
-		my_receive(rcv_msg, rank);
+		my_receive(rcv_msg, rank, num_servers);
 	}
 
 	if (rank == 0)

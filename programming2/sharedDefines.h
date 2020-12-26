@@ -63,7 +63,7 @@ struct _msg {
 };
 
 void my_send(int *msg, int rank, int tag);
-void my_receive(int *msg, int rank);
+void my_receive(int *msg, int rank, int num_servers);
 void prepare_msg(int *arr, int val1, int val2, int val3, int val4, int val5, int val6);
 
 #endif
