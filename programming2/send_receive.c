@@ -27,15 +27,11 @@ void my_send(int *msg, int rank, int tag) {
 		break;
 
 	case START_LEADER_ELECTION:
-
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
-
 		break;
 
 	case CONNECT:
-		//MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		//MPI_Send(&msg->val_1, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
 
 	case EXIT:
@@ -215,53 +211,51 @@ void my_receive(int *msg, int rank) {
 
 				break;
 
-			//case CONNECT:
-			//	MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			case CONNECT:
+				client1 = rcv_msg[0];
+				client2 = rcv_msg[1];
 
-			//	client1 = rank;
-			//	client2 = rcv_msg.val_1;
+				DPRINT("[CONNECT] %d -> %d\n", client1, client2);
 
-			//	DPRINT("[CONNECT] %d -> %d\n", client1, client2);
+				if (!client_alive())
+					// Create new client - client1
+					new_client(client1);
 
-			//	if (!client_alive())
-			//		// Create new client - client1
-			//		new_client(client1);
+				// Add client2 to the list of neighbors of client1
+				insert_nbr_client(client2);
 
-			//	// Add client2 to the list of neighbors of client1
-			//	insert_nbr_client(client2);
+				// Prepare message
+				prepare_msg(send_msg, client1, client2, 0, 0, 0, 0);
 
-			//	MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-			//	MPI_Send(&rcv_msg.pid, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-			//	break;
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
 
-			//case NEIGHBOR:
-			//	MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-			//	
-			//	client1 = rcv_msg.val_1;
-			//	client2 = rank;
+				break;
 
-			//	DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
+			case NEIGHBOR:
 
-			//	if (!client_alive())
-			//		// Create new client - client1
-			//		new_client(client2);
+				client1 = rcv_msg[0];
+				client2 = rcv_msg[1];
 
-			//	// Add client1 to the list of neighbors of client2
-			//	insert_nbr_client(client1);
+				DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
 
-			//	MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-			//	
-			//	// Send ack message to client 1
-			//	ack_msg = prepare_msg(rank, 0, 0, 0, 0);
-			//	MPI_Send(&ack_msg.pid, 1, MPI_INT, client1, ACK, MPI_COMM_WORLD);
+				if (!client_alive())
+					// Create new client - client1
+					new_client(client2);
 
-			//	break;
+				// Add client1 to the list of neighbors of client2
+				insert_nbr_client(client1);
+
+				// Prepare ack message
+				prepare_msg(send_msg, client1, client2, 0, 0, 0, 0); 
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, client1, ACK, MPI_COMM_WORLD);
+
+				break;
 
 			case ACK:
-				DPRINT("[ACK] %d -> %d", rcv_msg[0], rank);
+				DPRINT("[ACK] %d -> %d\n", rcv_msg[0], rcv_msg[1]);
 				
 				// Send ack message to client 1
-				prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+				prepare_msg(ack_msg, rcv_msg[0], rcv_msg[1], 0, 0, 0, 0);
 				MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
 
 				break;

@@ -94,13 +94,13 @@ int main(int argc, char** argv) {
 
 
 				// Prepare message
-				//send_msg = prepare_msg(client_1, client_2, 0, 0, 0);
+				prepare_msg(send_msg, client_1, client_2, 0, 0, 0, 0);
 
-				//my_send(&send_msg, client_1, CONNECT);
+				my_send(send_msg, client_1, CONNECT);
 				
-				//MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 
-				//DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
+				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
 
 
 			}
