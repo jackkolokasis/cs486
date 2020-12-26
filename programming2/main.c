@@ -7,7 +7,6 @@
 
 #define SIZE 128		  // Maximum length of the input file name
 #define BUFFER_SIZE 1024  // Maximum length of a line in input file
-#define MSG_SIZE 5		  // Message size
 
 int main(int argc, char** argv) {
 	int num_process;					// Total number of process
@@ -19,8 +18,8 @@ int main(int argc, char** argv) {
 	int num_servers;					// Total number of servers
 	int i;								// Total time 
 	int leader;							// Leader process
-	struct _msg send_msg;				// Message
-	struct _msg rcv_msg;				// Message
+	int send_msg[6];
+	int rcv_msg[6];
 	MPI_Status status;					// Mpi Status
 
 	// Initialize the MPI environment
@@ -61,15 +60,15 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d %d", event, &s_rank, &l_rank, &r_rank);
 				DPRINT("%s %d %d %d\n", event, s_rank, l_rank, r_rank);
 
-				send_msg = prepare_msg(0, s_rank, l_rank, r_rank, 0);
+				prepare_msg(send_msg, 0, s_rank, l_rank, r_rank, 0, 0);
 
 				// Add server to the array
 				servers[i++] = s_rank;
 
-				my_send(&send_msg, s_rank, SERVER);	
+				my_send(send_msg, s_rank, SERVER);	
 
-				MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
-				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "START_LEADER_ELECTION") == 0) {
 				DPRINT("%s\n", event);
@@ -77,14 +76,14 @@ int main(int argc, char** argv) {
 
 				for (i = 0; i < num_servers; i++) {
 					// Prepare Message
-					send_msg = prepare_msg(servers[i], 0, 0, 0, 0);
+					prepare_msg(send_msg, servers[i], 0, 0, 0, 0, 0);
 
-					my_send(&send_msg, servers[i], START_LEADER_ELECTION);
+					my_send(send_msg, servers[i], START_LEADER_ELECTION);
 				}
-					
-				MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 				
-				DPRINT(">>> [ACK] PID %d\n", rcv_msg.pid);
+				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int client_1;				// Client rank
@@ -147,18 +146,18 @@ int main(int argc, char** argv) {
 		} 
 	}
 	else if (rank > 0 && rank <= num_servers){
-		my_receive(&rcv_msg, rank);
+		my_receive(rcv_msg, rank);
 	}
 
 	else {
-		my_receive(&rcv_msg, rank);
+		my_receive(rcv_msg, rank);
 	}
 
 	if (rank == 0)
 	{
 		for (i = 1; i < num_process; i++) {
-			send_msg = prepare_msg(0, 0, 0, 0, 0);
-			my_send(&send_msg, i, EXIT);
+			prepare_msg(send_msg, 0, 0, 0, 0, 0, 0);
+			my_send(send_msg, i, EXIT);
 		}
 	}
 

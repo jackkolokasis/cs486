@@ -8,251 +8,261 @@
 #include "client.h"
 #include "sharedDefines.h"
 
-struct _msg prepare_msg(int pid, int val_1, int val_2, int val_3, int val_4) {
-	struct _msg msg;
-
-	msg.pid = pid; 
-	msg.val_1 = val_1; 
-	msg.val_2 = val_2; 
-	msg.val_3 = val_3; 
-
-	return msg;
+// Prepare a message to send with values 1 - 6
+void prepare_msg(int *arr, int val1, int val2, int val3, int val4, int val5, int val6) {
+	arr[0] = val1;
+	arr[1] = val2;
+	arr[2] = val3;
+	arr[3] = val4;
+	arr[4] = val5;
+	arr[5] = val6;
 }
 
-void my_send(struct _msg *msg, int rank, int tag) {
+// Send message `msg` to process `rank` with the certain `tag`
+void my_send(int *msg, int rank, int tag) {
 	switch (tag) {
 
 	case SERVER:
-		MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		MPI_Send(&msg->val_1, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		MPI_Send(&msg->val_2, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		MPI_Send(&msg->val_3, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		MPI_Send(&msg->val_4, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
 
 	case START_LEADER_ELECTION:
 
-		MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 
 		break;
 
 	case CONNECT:
-		MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
-		MPI_Send(&msg->val_1, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		//MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		//MPI_Send(&msg->val_1, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
 
 		break;
 
 	case EXIT:
-		MPI_Send(&msg->pid, 1, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
 	}
 }
 
-void my_receive(struct _msg *msg, int rank) {
+// Process `rank` receive message `msg`. Based on the tag value perform the
+// following actions
+void my_receive(int *msg, int rank) {
 	MPI_Status status;				// Tag status
-	struct _msg rcv_msg;			// Receive message
-	struct _msg send_msg;			// Ack message
-	struct _msg ack_msg;			// Ack message
-	int j, k, d;				    // Ids for leader election
+
+	int rcv_msg[MSG_SIZE];			// Receive message
+	int send_msg[MSG_SIZE];			// Send message
+	int send_msg_l[MSG_SIZE];		// Send message to the left server
+	int send_msg_r[MSG_SIZE];		// Send message to the right server
+	int ack_msg[MSG_SIZE];			// Ack message
+
+	int jl, kl, dl;				    // Id, Phase, Distance for left server
+	int jr, kr, dr;				    // Id, Phase, Distance for left server
 	int client1, client2;			// Clients
 
 	while(1) {
-		MPI_Recv(&rcv_msg.pid, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(&rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
 		switch (status.MPI_TAG) {
 			case SERVER:
-				MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				MPI_Recv(&rcv_msg.val_2, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				MPI_Recv(&rcv_msg.val_3, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				MPI_Recv(&rcv_msg.val_4, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
 				DPRINT("[SERVER] | PID %d | S_RANK %d | L_RANK %d | R_RANK %d\n",
-						rcv_msg.pid, rcv_msg.val_1, rcv_msg.val_2, 
-						rcv_msg.val_3);
+						rcv_msg[0], rcv_msg[1], rcv_msg[2],  rcv_msg[3]);
 
 				// Initialize server
-				init_server(rcv_msg.val_1, rcv_msg.val_2, rcv_msg.val_3);
+				init_server(rcv_msg[1], rcv_msg[2], rcv_msg[3]);
 
-				ack_msg = prepare_msg(rcv_msg.val_1, 0, 0, 0, 0);
-
-				MPI_Send(&ack_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+				MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
 
 				break;
 
 			case START_LEADER_ELECTION:
 				//if (is_server_asleep()) {
 				//	set_server_asleep(0);
+				DPRINT("==============================================\n");
+				DPRINT("Processor = %d\n", rank);
+				DPRINT("==============================================\n");
 
 					// Prepare msg
-					send_msg = prepare_msg(rank, 0, 1, 0, 0);
-
-					MPI_Send(&send_msg.pid, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-					MPI_Send(&send_msg.val_1, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-					MPI_Send(&send_msg.val_2, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-
-					MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-					MPI_Send(&send_msg.val_1, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-					MPI_Send(&send_msg.val_2, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
+					prepare_msg(send_msg, rank, 0, 1, rank, 0, 1);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), PROB_LEFT, MPI_COMM_WORLD);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), PROB_RIGHT, MPI_COMM_WORLD);
 				//}
 				break;
 
-			case PROB:
-				MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				MPI_Recv(&rcv_msg.val_2, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			case PROB_LEFT:
+				jl = rcv_msg[0]; 
+				kl = rcv_msg[1];
+				dl = rcv_msg[2];
 
-				j = rcv_msg.pid;
-				k = rcv_msg.val_1;
-				d = rcv_msg.val_2;
-
-				if (j == rank) {
+				if (jl == rank) {
 					// Prepare msg
-					send_msg = prepare_msg(rank, 0, 0, 0 ,0);
+					prepare_msg(send_msg, rank, 0, 0, 0 , 0, 0);
 					set_leader(rank);
 					make_leader();
-					MPI_Send(&send_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
-					//MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
 				}
 
-				if (j > rank && d < pow(2, k)) { // forward the msg
+				if (jl > rank && dl < pow(2, kl)) { // forward the msg
 					// Prepare message to send, increment hop counter
-					send_msg = prepare_msg(j, k, d+1, 0, 0);
+					prepare_msg(send_msg_l, jl, kl, dl + 1, 0, 0, 0);
 
-					// Send to the left or right
-					if (status.MPI_SOURCE == left_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_2, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-					}
-
-					if (status.MPI_SOURCE == right_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_2, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-					}
+					MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, right_server_id(), PROB_LEFT, MPI_COMM_WORLD);
 				}
-				if (j > rank && d >= pow(2, k)) { // reply to the msg
+				if (jl > rank && dl >= pow(2, kl)) { // reply to the msg
 					// Prepare message to send, increment hop counter
-					send_msg = prepare_msg(j, k, 0, 0, 0);
+					prepare_msg(send_msg_l, jl, kl, 0, 0, 0, 0);
 					
 					// Send to the left or right
-					if (status.MPI_SOURCE == left_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, left_server_id(), REPLY, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, left_server_id(), REPLY, MPI_COMM_WORLD);
-					}
-
-					if (status.MPI_SOURCE == right_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), REPLY, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, right_server_id(), REPLY, MPI_COMM_WORLD);
-					}
+					MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, left_server_id(), REPLY_LEFT, MPI_COMM_WORLD);
 				}
 
 				break;
 
-			case REPLY:
-				MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				
-				j = rcv_msg.pid;
-				k = rcv_msg.val_1;
-				
-				if (j != rank) { // Forward the reply
+			case PROB_RIGHT:
+				jr = rcv_msg[0];
+				kr = rcv_msg[1];
+				dr = rcv_msg[2];
+
+				if (jr == rank) {
+					// Prepare msg
+					prepare_msg(send_msg, rank, 0, 0, 0 ,0, 0);
+					set_leader(rank);
+					make_leader();
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+				}
+
+				if (jr > rank && dr < pow(2, kr)) { // forward the msg
 					// Prepare message to send, increment hop counter
-					send_msg = prepare_msg(j, k, 0, 0, 0);
+					prepare_msg(send_msg_r, jr, kr, dr+1, 0, 0, 0);
 
-					// Send to the left or right
-					if (status.MPI_SOURCE == left_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), REPLY, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, right_server_id(), REPLY, MPI_COMM_WORLD);
-					}
+					MPI_Send(send_msg_r, MSG_SIZE, MPI_INT, left_server_id(), PROB_RIGHT, MPI_COMM_WORLD);
+				}
+				if (jr > rank && dr >= pow(2, kr)) { // reply to the msg
+					// Prepare message to send, increment hop counter
+					prepare_msg(send_msg_r, jr, kr, 0, 0, 0, 0);
+					
+					MPI_Send(send_msg_r, MSG_SIZE, MPI_INT, right_server_id(), REPLY_RIGHT, MPI_COMM_WORLD);
+				}
 
-					if (status.MPI_SOURCE == right_server_id()) {
-						MPI_Send(&send_msg.pid, 1, MPI_INT, left_server_id(), REPLY, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, left_server_id(), REPLY, MPI_COMM_WORLD);
-					}
+				break;
+
+			case REPLY_LEFT:
+				jl = rcv_msg[0];
+				kl = rcv_msg[1];
+				
+				if (jl != rank) { // Forward the reply
+					// Prepare message to send, increment hop counter
+					prepare_msg(send_msg_l, jl, kl, 0, 0, 0, 0);
+
+					MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, right_server_id(), REPLY_LEFT, MPI_COMM_WORLD);
 				}
 				else { // Reply is for own prob
-					// Prepare message to send, increment hop counter
-					if (status.MPI_SOURCE == left_server_id())
-						set_server_l_reply(1);
-					else 
-						set_server_r_reply(1);
+					set_server_l_reply(1);
 
 					// Phase k winner
-					if (is_server_l_reply() && is_server_r_reply()) {
+					if (is_server_r_reply()) {
 						set_server_l_reply(0);
 						set_server_r_reply(0);
-						send_msg = prepare_msg(rank, k + 1, 1, 0, 0);
 
-						MPI_Send(&send_msg.pid, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_2, 1, MPI_INT, left_server_id(), PROB, MPI_COMM_WORLD);
+						// Prepare message to send, increment hop counter
+						prepare_msg(send_msg_l, rank, kl + 1, 1, 0, 0, 0);
+						prepare_msg(send_msg_r, rank, kl + 1, 1, 0, 0, 0);
 
-						MPI_Send(&send_msg.pid, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_1, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
-						MPI_Send(&send_msg.val_2, 1, MPI_INT, right_server_id(), PROB, MPI_COMM_WORLD);
+						MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, left_server_id(), PROB_LEFT, MPI_COMM_WORLD);
+						MPI_Send(send_msg_r, MSG_SIZE, MPI_INT, right_server_id(), PROB_RIGHT, MPI_COMM_WORLD);
+					}
+				}
+				break;
+			
+			case REPLY_RIGHT:
+				jr = rcv_msg[0];
+				kr = rcv_msg[1];;
+				
+				if (jr != rank) { // Forward the reply
+					// Prepare message to send, increment hop counter
+					prepare_msg(send_msg_r, jr, kr, 0, 0, 0, 0);
+
+					MPI_Send(send_msg_r, MSG_SIZE, MPI_INT, left_server_id(), REPLY_RIGHT, MPI_COMM_WORLD);
+				}
+				else { // Reply is for own prob
+					set_server_r_reply(1);
+
+					// Phase k winner
+					if (is_server_l_reply()) {
+						set_server_l_reply(0);
+						set_server_r_reply(0);
+						// Prepare message to send, increment hop counter
+						prepare_msg(send_msg_l, rank, kr + 1, 1, 0, 0, 0);
+						prepare_msg(send_msg_r, rank, kr + 1, 1, 0, 0, 0);
+
+						MPI_Send(&send_msg_l, MSG_SIZE, MPI_INT, left_server_id(), PROB_LEFT, MPI_COMM_WORLD);
+						MPI_Send(&send_msg_r, MSG_SIZE, MPI_INT, right_server_id(), PROB_RIGHT, MPI_COMM_WORLD);
 					}
 				}
 				break;
 
-
 			case LEADER:
-				set_leader(rcv_msg.pid);
+				set_leader(rcv_msg[0]);
 
-				if (is_leader())
-					MPI_Send(&rcv_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				if (is_leader()) {
+					prepare_msg(send_msg, get_leader(), 0, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				}
 				else {
-					MPI_Send(&rcv_msg.pid, 1, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
+					prepare_msg(send_msg_l, rcv_msg[0], 0, 0, 0, 0, 0);
+					MPI_Send(send_msg_l, MSG_SIZE, MPI_INT, right_server_id(), LEADER, MPI_COMM_WORLD);
 				}
 
 				break;
 
-			case CONNECT:
-				MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			//case CONNECT:
+			//	MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
-				client1 = rank;
-				client2 = rcv_msg.val_1;
+			//	client1 = rank;
+			//	client2 = rcv_msg.val_1;
 
-				DPRINT("[CONNECT] %d -> %d\n", client1, client2);
+			//	DPRINT("[CONNECT] %d -> %d\n", client1, client2);
 
-				if (!client_alive())
-					// Create new client - client1
-					new_client(client1);
+			//	if (!client_alive())
+			//		// Create new client - client1
+			//		new_client(client1);
 
-				// Add client2 to the list of neighbors of client1
-				insert_nbr_client(client2);
+			//	// Add client2 to the list of neighbors of client1
+			//	insert_nbr_client(client2);
 
-				MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-				MPI_Send(&rcv_msg.pid, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-				break;
+			//	MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
+			//	MPI_Send(&rcv_msg.pid, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
+			//	break;
 
-			case NEIGHBOR:
-				MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				
-				client1 = rcv_msg.val_1;
-				client2 = rank;
+			//case NEIGHBOR:
+			//	MPI_Recv(&rcv_msg.val_1, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			//	
+			//	client1 = rcv_msg.val_1;
+			//	client2 = rank;
 
-				DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
+			//	DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
 
-				if (!client_alive())
-					// Create new client - client1
-					new_client(client2);
+			//	if (!client_alive())
+			//		// Create new client - client1
+			//		new_client(client2);
 
-				// Add client1 to the list of neighbors of client2
-				insert_nbr_client(client1);
+			//	// Add client1 to the list of neighbors of client2
+			//	insert_nbr_client(client1);
 
-				MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
-				
-				// Send ack message to client 1
-				ack_msg = prepare_msg(rank, 0, 0, 0, 0);
-				MPI_Send(&ack_msg.pid, 1, MPI_INT, client1, ACK, MPI_COMM_WORLD);
+			//	MPI_Send(&rcv_msg.val_1, 1, MPI_INT, client2, NEIGHBOR, MPI_COMM_WORLD);
+			//	
+			//	// Send ack message to client 1
+			//	ack_msg = prepare_msg(rank, 0, 0, 0, 0);
+			//	MPI_Send(&ack_msg.pid, 1, MPI_INT, client1, ACK, MPI_COMM_WORLD);
 
-				break;
+			//	break;
 
 			case ACK:
-				DPRINT("[ACK] %d -> %d", rcv_msg.pid, rank);
+				DPRINT("[ACK] %d -> %d", rcv_msg[0], rank);
 				
 				// Send ack message to client 1
-				ack_msg = prepare_msg(rank, 0, 0, 0, 0);
-				MPI_Send(&ack_msg.pid, 1, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+				MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
 
 				break;
 

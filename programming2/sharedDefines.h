@@ -42,12 +42,17 @@
 #define PRINT                 6
 #define EXTERNAL SUPPLY       7
 #define REPORT                8
-#define PROB                  9
-#define REPLY                 10
-#define LEADER                11
-#define NEIGHBOR              12
+#define PROB_LEFT             9
+#define PROB_RIGHT            10
+#define REPLY_LEFT            11
+#define REPLY_RIGHT           12
+#define LEADER                13
+#define NEIGHBOR              14
 #define ACK                   255
 #define EXIT                  425
+
+#define MSG_SIZE 6		  // Message size
+
 
 struct _msg {
 	int pid;			// Process Id 
@@ -57,9 +62,8 @@ struct _msg {
 	int val_4;			// Value
 };
 
-void my_send(struct _msg *msg, int rank, int tag);
-void my_receive(struct _msg *msg, int rank);
-struct _msg prepare_msg(int pid, int val_1, int val_2, int val_3, int val_4);
-
+void my_send(int *msg, int rank, int tag);
+void my_receive(int *msg, int rank);
+void prepare_msg(int *arr, int val1, int val2, int val3, int val4, int val5, int val6);
 
 #endif
