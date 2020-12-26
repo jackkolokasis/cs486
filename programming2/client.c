@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "client.h"
+#include <stdio.h>
 
 static int exist = 0;
 
@@ -34,4 +35,18 @@ struct _neighbor* internal_insert_nbr(struct _neighbor *head, int id) {
 	}
 
 	return head;
+}
+
+void print_client() {
+	struct _neighbor *tmp;
+
+	printf("==========================================\n");
+	printf(" CLIENT ID: %d\n", client.id);
+	printf(" NEIGHBORS: ");
+
+	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next) {
+		printf("%d ", tmp->id);
+	}
+
+	printf("\n==========================================\n");
 }

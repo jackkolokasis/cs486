@@ -261,6 +261,9 @@ void my_receive(int *msg, int rank) {
 				break;
 
 			case EXIT:
+				if (rank > 4)
+					print_client();
+
 				return;
 				break;
 		}

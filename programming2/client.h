@@ -23,6 +23,8 @@ int client_alive();
 
 void insert_nbr_client(int id);
 
+void print_client();
+
 struct _neighbor* internal_insert_nbr(struct _neighbor *head, int id);
 
 
