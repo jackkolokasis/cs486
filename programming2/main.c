@@ -160,18 +160,33 @@ int main(int argc, char** argv) {
 				DPRINT("%s %d %d\n", event, s_rank, num);
 
 				ack_counter++;
+
 				prepare_msg(send_msg, s_rank, num, 0, 0, 0, 0);
 				my_send(send_msg, s_rank, SUPPLY);
 				
 				// Wait for server to reply	
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, SUPPLY_ACK, MPI_COMM_WORLD, &status);
 				ack_counter--;
+
 				printf("SERVER: %d | RECEIVED %d\n", s_rank, rcv_msg[2]);
 				DPRINT(">>> [ACK SUPPLY] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "PRINT") == 0) {
 				sscanf(buff, "%s", event);
 				DPRINT("%s\n", event);
+
+				while (ack_counter != 0); 
+
+				ack_counter ++;
+
+				prepare_msg(send_msg, leader, 0, 0, 0 ,0, 0);
+				my_send(send_msg, leader, PRINT);
+
+				// Wait for leader to reply	
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
+
+				DPRINT(">>> [ACK PRINT] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "EXTERNAL_SUPPLY") == 0) {
 				int num;			   // Num

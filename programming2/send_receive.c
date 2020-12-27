@@ -53,6 +53,10 @@ void my_send(int *msg, int rank, int tag) {
 	case EXTERNAL_SUPPLY:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
+	
+	case PRINT:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -601,6 +605,21 @@ void my_receive(int *msg, int rank, int num_servers) {
 
 				prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
 				MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), CHECK_SUPPLY, MPI_COMM_WORLD);
+
+				break;
+
+			case PRINT:
+				if (rank == get_leader() && status.MPI_SOURCE == right_server_id()) {
+					prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				}
+				else {
+					printf("SERVER %d HAS QUANTITY %d\n", rank, get_stock());
+					fflush(stdout);
+					
+					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), PRINT, MPI_COMM_WORLD);
+				}
 
 				break;
 
