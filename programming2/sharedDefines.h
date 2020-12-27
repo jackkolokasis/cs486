@@ -62,6 +62,8 @@
 #define CHECK_SUPPLY          24
 #define SUPPLY_REQ			  25
 #define ACK_SUPPLY_REQ		  26
+#define REP_COLLECT		      27
+#define TOTAL_REPORT		  28
 #define ACK                   255
 #define SUPPLY_ACK            355
 #define TERMINATE             100

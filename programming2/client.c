@@ -141,3 +141,6 @@ void decr_purchase(int val) {
 	client.purchase -= val;;
 }
 
+int get_purchase() {
+	return client.purchase;
+}

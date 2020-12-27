@@ -212,6 +212,20 @@ int main(int argc, char** argv) {
 			else if (strcmp(event, "REPORT") == 0) {
 				sscanf(buff, "%s", event);
 				DPRINT("%s\n", event);
+
+				while (ack_counter != 0);
+
+				ack_counter++;
+				for (i = 1; i <= num_servers; i++) {
+					prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
+					my_send(send_msg, i, REPORT);
+				}
+
+
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
+
+				DPRINT(">>> [ACK REPORT] PID %d\n", rcv_msg[0]);
 			}
 			else {
 				DPRINT("Invalid option");

@@ -57,6 +57,10 @@ void my_send(int *msg, int rank, int tag) {
 	case PRINT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
+	
+	case REPORT:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -88,6 +92,9 @@ void my_receive(int *msg, int rank, int num_servers) {
 	int total_num_vertex = 0;			// Total number of vertex from all servers
 	int count = 0;						// Counter
 	int quantity;					// Quantity and diff to supply
+	int purchases = 0;					// Number of purchases for each client childrens
+	int total_purchases = 0;			// Total purchases from all client in a server tree
+	int replies = 0;					// Number of replies
 
 	while(1) {
 		MPI_Recv(&rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -625,7 +632,74 @@ void my_receive(int *msg, int rank, int num_servers) {
 				}
 
 				break;
+			
+			case REPORT:
+				p = rcv_msg[0];
 
+				if (rank <= num_servers) {
+					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+					for (s_tmp = get_server_children(); s_tmp != NULL; s_tmp = s_tmp->next) {
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, s_tmp->id, REPORT, MPI_COMM_WORLD);
+					}
+				}
+				else {
+					if (has_client_children()) {
+						prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+
+						for (c_tmp = get_client_children(); c_tmp != NULL; c_tmp = c_tmp->next)
+							MPI_Send(send_msg, MSG_SIZE, MPI_INT, c_tmp->id, REPORT, MPI_COMM_WORLD);
+					}
+					else {
+						prepare_msg(send_msg, rank, get_purchase(), 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, p, REP_COLLECT, MPI_COMM_WORLD);
+					}
+				}
+
+				break;
+
+			case REP_COLLECT:
+				p = rcv_msg[0];
+				purchases += rcv_msg[1];
+
+				// Increase the number of replies
+				replies++;
+
+				if (rank <= num_servers) {
+					if (replies == num_server_child()) {
+						prepare_msg(send_msg, rank, purchases, 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), TOTAL_REPORT, MPI_COMM_WORLD);
+					}
+				}
+				else {
+					if (replies == num_client_child()) {
+						purchases += get_purchase();
+						prepare_msg(send_msg, rank, purchases, 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, REP_COLLECT, MPI_COMM_WORLD);
+					}
+				}
+				break;
+			
+			case TOTAL_REPORT:
+				count ++;
+				DPRINT("COUNT = %d", count);
+				total_purchases += rcv_msg[1];
+
+				printf("REPORT S_ID: %d | QUANTITY: %d\n", rcv_msg[0], rcv_msg[1]);
+				fflush(stdout);
+
+				if (count == num_servers) {
+					printf("TOTAL REPORT S_ID: %d | QUANTITY: %d\n", rank, total_purchases);
+					fflush(stdout);
+
+					total_purchases = 0;
+					count = 0;
+
+					prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				}
+
+				break;
+			
 			case ACK:
 				DPRINT("[ACK] %d -> %d\n", rcv_msg[0], rcv_msg[1]);
 				

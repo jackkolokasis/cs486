@@ -57,6 +57,8 @@ void incr_purchase(int val);
 
 void decr_purchase(int val);
 
+int get_purchase();
+
 
 
 
