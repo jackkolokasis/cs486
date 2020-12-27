@@ -25,6 +25,8 @@ struct _server {
 	int stock;
 	int active_requests;
 
+	int num_child;
+
 	struct _child *child;
 	struct _child *nbr;
 	struct _child *parent;
@@ -75,8 +77,9 @@ struct _child* internal_insert_child(struct _child *head, int id);
 
 void print_server();
 
-
 struct _child* get_server_nbrs();
+
+struct _child* get_server_children();
 
 void insert_nbr_server(int id);
 
@@ -85,5 +88,9 @@ void add_server_child(int id);
 void add_server_other(int id);
 
 int contains_server_nbrs();
+
+int has_server_children();
+
+int num_server_child();
 
 #endif

@@ -111,20 +111,27 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d", event, &c_rank, &num);
 				DPRINT("%s %d %d\n", event, c_rank, num);
 
-					DPRINT(">>> %s <<<<< \n", last_event);
 				if (strcmp(last_event, "CONNECT") == 0) {
-					DPRINT(">>> CHECK <<<<< \n");
 					
-					// Prepare msg
 					prepare_msg(send_msg, leader, 0, 0, 0, 0, 0);
 					
 					my_send(send_msg, leader, SPANNING_TREE);
 
-					for (i = 1; i <= num_servers; i++) {
+					for (i = 1; i <= 16; i++) {
 						MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
 						DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
 					}
+
+					// Count number of clients in each server spanning tree
+					for (i = 1; i <= num_servers; i++) {
+						prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
+						my_send(send_msg, i, COUNT);
+					}
+					//	
+					MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+					DPRINT(">>> [ACK Count] PID %d\n", rcv_msg[0]);
 				}
+
 			}
 			else if (strcmp(event, "SUPPLY") == 0) {
 				int s_rank;				// Server rank

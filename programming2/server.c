@@ -18,6 +18,8 @@ void init_server(int id, int l_id, int r_id) {
 	server.lead_l_reply = 0;
 	server.lead_r_reply = 0;
 	
+	server.num_child = 0;
+
 	server.nbr = NULL;
 	server.child = NULL;
 	server.parent = NULL;
@@ -83,6 +85,7 @@ int is_leader() {
 
 void add_server_child(int id) {
 	server.child = internal_insert_child(server.child, id);
+	server.num_child++;
 }
 
 void add_server_other(int id) {
@@ -173,4 +176,20 @@ int contains_server_nbrs() {
 		sum_other += tmp->id;
 
 	return (sum_nbrs == sum_child + sum_other);
+}
+
+int has_children() {
+	return server.child != NULL;
+}
+
+struct _child* get_server_children() {
+	return server.child;
+}
+
+int num_server_child() {
+	return server.num_child;
+}
+
+void print_msg(int id, int val) {
+
 }

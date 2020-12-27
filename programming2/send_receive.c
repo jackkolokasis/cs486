@@ -36,6 +36,11 @@ void my_send(int *msg, int rank, int tag) {
 
 	case SPANNING_TREE:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
+
+	case COUNT:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -61,6 +66,11 @@ void my_receive(int *msg, int rank, int num_servers) {
 
 	struct _child *s_tmp;			// Server children
 	struct _neighbor *c_tmp;		// Client neighbor
+
+	int num_reply = 0;					// Number of replies by children
+	int num_vertex = 0;					// Number of vertex
+	int total_num_vertex = 0;			// Total number of vertex from all servers
+	int count = 0;						// Counter
 
 	while(1) {
 		MPI_Recv(&rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -326,8 +336,8 @@ void my_receive(int *msg, int rank, int num_servers) {
 					add_client_child(p);
 					if (contains_client_nbrs()) { // Terminate
 						// Prepare message
-						// prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
-						// MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
 						break;
 					}
 				}
@@ -351,12 +361,77 @@ void my_receive(int *msg, int rank, int num_servers) {
 					add_client_other(p);
 
 					if (contains_client_nbrs()) { // Terminate
-						break;
 						// Prepare message
-						//prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
-						//MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						break;
 					}
 				}
+				break;
+
+			case COUNT:
+				p = rcv_msg[0];
+
+				if (rank <= num_servers) {
+					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+					for (s_tmp = get_server_children(); s_tmp != NULL; s_tmp = s_tmp->next) {
+						DPRINT("COUNT | ID = %d\n", s_tmp->id);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, s_tmp->id, COUNT, MPI_COMM_WORLD);
+					}
+				}
+				else {
+					if (has_client_children()) {
+						prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+
+						for (c_tmp = get_client_children(); c_tmp != NULL; c_tmp = c_tmp->next)
+							MPI_Send(send_msg, MSG_SIZE, MPI_INT, c_tmp->id, COUNT, MPI_COMM_WORLD);
+					}
+					else {
+						prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, p, COLLECT, MPI_COMM_WORLD);
+					}
+				}
+
+				break;
+
+			case COLLECT:
+				p = rcv_msg[0];
+				num_vertex += rcv_msg[1];
+
+				// Increase the number of replies
+				num_reply++;
+
+				if (rank <= num_servers) {
+					if (num_reply == num_server_child()) {
+						num_vertex += num_server_child();
+						prepare_msg(send_msg, rank, num_vertex, 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), TOTAL, MPI_COMM_WORLD);
+					}
+				}
+				else {
+					if (num_reply == num_client_child()) {
+						num_vertex += num_client_child();
+						prepare_msg(send_msg, rank, num_vertex, 0, 0, 0, 0);
+						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, COLLECT, MPI_COMM_WORLD);
+					}
+				}
+				break;
+
+			case TOTAL:
+				count ++;
+				total_num_vertex += rcv_msg[1];
+
+				printf("SPANNING_TREE: S_ID: %d | NODES: %d\n", rcv_msg[0], rcv_msg[1]);
+
+				if (count == num_servers) {
+					printf("REPORT: S_ID: %d | NODES: %d\n", rank, total_num_vertex);
+					total_num_vertex = 0;
+					count = 0;
+
+					prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+				}
+
 				break;
 
 			case ACK:

@@ -7,7 +7,10 @@ static int exist = 0;
 // Create new client with `id`
 void new_client(int id) {
 	exist = 1;
+
 	client.id = id;
+	client.num_child = 0;
+
 	client.nbr = NULL;
 	client.child = NULL;
 	client.parent = NULL;
@@ -66,6 +69,7 @@ void print_client() {
 
 void add_client_child(int id) {
 	client.child = internal_insert_nbr(client.child, id);
+	client.num_child++;
 }
 
 void add_client_parent(int id) {
@@ -105,4 +109,21 @@ int contains_client_nbrs() {
 		sum_par += tmp->id;
 	
 	return (sum_nbrs - sum_par == sum_child + sum_other);
+}
+
+int has_client_children() {
+	return client.child != NULL;
+}
+
+struct _neighbor* get_client_parent() {
+	return client.parent;
+
+}
+
+struct _neighbor* get_client_children() {
+	return client.child;
+}
+
+int num_client_child() {
+	return client.num_child;
 }

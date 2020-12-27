@@ -10,6 +10,8 @@ struct _neighbor {
 
 struct _client {
 	int id;						// Id of the client
+	int num_child;				// Num child
+
 	struct _neighbor *nbr;		// Neighbors of this client
 	struct _neighbor *child;	// List of childs  
 	struct _neighbor *parent;	// List of parents
@@ -33,6 +35,10 @@ void insert_nbr_client(int id);
 
 struct _neighbor* get_client_nbrs();
 
+struct _neighbor* get_client_parent();
+
+struct _neighbor* get_client_children();
+
 void add_client_parent(int id);
 
 int has_client_parent();
@@ -43,6 +49,9 @@ void add_client_other(int id);
 
 int contains_client_nbrs();
 
+int has_client_children();
+
+int num_client_child();
 
 
 

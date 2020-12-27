@@ -53,8 +53,11 @@
 #define MSG			          17
 #define PARENT			      18
 #define ALREADY			      19
+#define COUNT			      20
+#define COLLECT  		      21
 #define ACK                   255
 #define TERMINATE             100
+#define TOTAL                 333
 #define EXIT                  425
 
 #define MSG_SIZE 6		  // Message size
