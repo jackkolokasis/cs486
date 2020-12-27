@@ -93,4 +93,9 @@ int has_server_children();
 
 int num_server_child();
 
+void incr_stock(int val);
+
+void decr_stock(int val);
+
+
 #endif

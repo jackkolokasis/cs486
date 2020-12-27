@@ -24,6 +24,8 @@ void init_server(int id, int l_id, int r_id) {
 	server.child = NULL;
 	server.parent = NULL;
 	server.other = NULL;
+
+	server.stock = 1000;
 }
 
 int server_id() {
@@ -130,6 +132,8 @@ void print_server() {
 	printf("\n OTHER: ");
 	for (tmp = server.other; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
+	
+	printf("\n STOCK: %d\n", server.stock);
 
 	printf("\n==========================================\n");
 }
@@ -190,6 +194,11 @@ int num_server_child() {
 	return server.num_child;
 }
 
-void print_msg(int id, int val) {
+void incr_stock(int val) {
+	server.stock += val;
+}
+
+void decr_stock(int val) {
+	server.stock -= val;
 
 }

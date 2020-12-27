@@ -10,6 +10,7 @@ void new_client(int id) {
 
 	client.id = id;
 	client.num_child = 0;
+	client.purchase = 0;
 
 	client.nbr = NULL;
 	client.child = NULL;
@@ -63,6 +64,8 @@ void print_client() {
 	printf("\n OTHER: ");
 	for (tmp = client.other; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
+	
+	printf("\n PURCHASE: %d\n", client.purchase);
 
 	printf("\n==========================================\n");
 }
@@ -127,3 +130,13 @@ struct _neighbor* get_client_children() {
 int num_client_child() {
 	return client.num_child;
 }
+
+void incr_purchase(int val) {
+	client.purchase += val;;
+}
+
+
+void decr_purchase(int val) {
+	client.purchase -= val;;
+}
+

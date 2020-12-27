@@ -53,6 +53,9 @@ int has_client_children();
 
 int num_client_child();
 
+void incr_purchase(int val);
+
+void decr_purchase(int val);
 
 
 

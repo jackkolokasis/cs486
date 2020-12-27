@@ -41,6 +41,10 @@ void my_send(int *msg, int rank, int tag) {
 	case COUNT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
+	
+	case ORDER:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -432,6 +436,30 @@ void my_receive(int *msg, int rank, int num_servers) {
 					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
 				}
 
+				break;
+	
+			case ORDER:
+				incr_purchase(rcv_msg[1]); // Increase purcases by num
+
+				prepare_msg(send_msg, rcv_msg[0], rcv_msg[1], 0, 0, 0, 0);
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, P_ORDER, MPI_COMM_WORLD);
+
+				break;
+
+			case P_ORDER:
+				if (rank <= num_servers) {
+					int client = rcv_msg[0];
+					int val = rcv_msg[1];
+					
+					decr_stock(val);
+
+					prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, client, ACK, MPI_COMM_WORLD);
+				}
+				else {
+					prepare_msg(send_msg, rcv_msg[0], rcv_msg[1], 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, P_ORDER, MPI_COMM_WORLD);
+				}
 				break;
 
 			case ACK:

@@ -127,11 +127,19 @@ int main(int argc, char** argv) {
 						prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
 						my_send(send_msg, i, COUNT);
 					}
-					//	
+
+					// Wait for the leader to reply	
 					MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 					DPRINT(">>> [ACK Count] PID %d\n", rcv_msg[0]);
 				}
-
+				
+				prepare_msg(send_msg, c_rank, num, 0, 0, 0, 0);
+				my_send(send_msg, c_rank, ORDER);
+					
+				// Wait for the client to reply	
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				printf("CLIENT: %d | SOLD %d\n", c_rank, num);
+				DPRINT(">>> [ACK ORDER] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "SUPPLY") == 0) {
 				int s_rank;				// Server rank
