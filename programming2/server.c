@@ -1,6 +1,7 @@
 #include "server.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "sharedDefines.h"
 
 void init_server(int id, int l_id, int r_id) {
 	server.s_rank = id;
@@ -116,27 +117,27 @@ struct _child* internal_insert_child(struct _child *head, int id) {
 void print_server() {
 	struct _child *tmp;
 
-	printf("==========================================\n");
-	printf(" SERVER ID: %d\n", server.s_rank);
-	printf(" LEFT SERVER ID: %d\n", server.l_rank);
-	printf(" RIGHT SERVER ID: %d\n", server.r_rank);
-	printf(" LEADER ID: %d\n", server.leader);
+	DPRINT("==========================================\n");
+	DPRINT(" SERVER ID: %d\n", server.s_rank);
+	DPRINT(" LEFT SERVER ID: %d\n", server.l_rank);
+	DPRINT(" RIGHT SERVER ID: %d\n", server.r_rank);
+	DPRINT(" LEADER ID: %d\n", server.leader);
 
-	printf(" NEIGHBORS: ");
+	DPRINT(" NEIGHBORS: ");
 	for (tmp = server.nbr; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 
-	printf("\n CHILDREN: ");
+	DPRINT("\n CHILDREN: ");
 	for (tmp = server.child; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 	
-	printf("\n OTHER: ");
+	DPRINT("\n OTHER: ");
 	for (tmp = server.other; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 	
-	printf("\n STOCK: %d\n", server.stock);
+	DPRINT("\n STOCK: %d\n", server.stock);
 
-	printf("\n==========================================\n");
+	DPRINT("\n==========================================\n");
 }
 
 void set_server_leader_l_reply(int val) {

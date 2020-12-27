@@ -439,9 +439,12 @@ void my_receive(int *msg, int rank, int num_servers) {
 				total_num_vertex += rcv_msg[1];
 
 				printf("SPANNING_TREE: S_ID: %d | NODES: %d\n", rcv_msg[0], rcv_msg[1]);
+				fflush(stdout);
 
 				if (count == num_servers) {
 					printf("REPORT: S_ID: %d | NODES: %d\n", rank, total_num_vertex);
+					fflush(stdout);
+
 					total_num_vertex = 0;
 					count = 0;
 

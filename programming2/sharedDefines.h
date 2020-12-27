@@ -14,7 +14,9 @@
 #define DEBUG 1	// Enable Debug Mode
 
 #if DEBUG
-#define DPRINT(...) fprintf(stderr, __VA_ARGS__);
+#define DPRINT(...) \
+	fprintf(stderr, __VA_ARGS__); \
+	fflush(stderr)
 #else  /* DEBUG */
 #define DPRINT(...)
 #endif /* DEBUG */

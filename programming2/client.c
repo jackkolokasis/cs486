@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "client.h"
 #include <stdio.h>
+#include "sharedDefines.h"
 
 static int exist = 0;
 
@@ -47,27 +48,27 @@ struct _neighbor* internal_insert_nbr(struct _neighbor *head, int id) {
 void print_client() {
 	struct _neighbor *tmp;
 
-	printf("==========================================\n");
-	printf(" CLIENT ID: %d\n", client.id);
-	printf(" NEIGHBORS: ");
+	DPRINT("==========================================\n");
+	DPRINT(" CLIENT ID: %d\n", client.id);
+	DPRINT(" NEIGHBORS: ");
 	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 	
-	printf("\n PARENTS: ");
+	DPRINT("\n PARENTS: ");
 	for (tmp = client.parent; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 
-	printf("\n CHILDREN: ");
+	DPRINT("\n CHILDREN: ");
 	for (tmp = client.child; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 	
-	printf("\n OTHER: ");
+	DPRINT("\n OTHER: ");
 	for (tmp = client.other; tmp != NULL; tmp = tmp->next)
-		printf("%d ", tmp->id);
+		DPRINT("%d ", tmp->id);
 	
-	printf("\n PURCHASE: %d\n", client.purchase);
+	DPRINT("\n PURCHASE: %d\n", client.purchase);
 
-	printf("\n==========================================\n");
+	DPRINT("\n==========================================\n");
 }
 
 void add_client_child(int id) {
