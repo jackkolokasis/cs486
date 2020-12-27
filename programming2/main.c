@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
 					
 					my_send(send_msg, leader, SPANNING_TREE);
 
-					for (i = 1; i <= 16; i++) {
+					for (i = 1; i <= num_servers; i++) {
 						MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
 						DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
 					}

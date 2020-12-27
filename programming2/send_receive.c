@@ -336,8 +336,8 @@ void my_receive(int *msg, int rank, int num_servers) {
 					add_client_child(p);
 					if (contains_client_nbrs()) { // Terminate
 						// Prepare message
-						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
-						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						//prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						//MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
 						break;
 					}
 				}
@@ -362,8 +362,8 @@ void my_receive(int *msg, int rank, int num_servers) {
 
 					if (contains_client_nbrs()) { // Terminate
 						// Prepare message
-						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
-						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						//prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						//MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
 						break;
 					}
 				}
