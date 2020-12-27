@@ -3,7 +3,7 @@ CFLAGS = -g
 MPIRUN = mpirun
 EXECS = warehouse
 NUM_PROCESS = 20
-HOSTFILE = ./testfiles/Graduates/testfile2/np20_servers4.txt
+HOSTFILE = hostfile
 
 TEST1 = ./testfiles/Graduates/testfile1/np90_servers20.txt
 TEST2 = ./testfiles/Graduates/testfile2/np20_servers4.txt
@@ -20,8 +20,16 @@ server.o: server.c
 client.o: client.c
 	$(MPICC) $(CFLAGS) -c $< -lm
 
+csd_test1:
+	$(MPIRUN) -np 90 ./$(EXECS) $(TEST1) 20 > err 2>&1 > out
+
+csd_test2:
+	$(MPIRUN) -np 20 ./$(EXECS) $(TEST2) 4 > err 2>&1 > out
+
+csd_test3:
+	$(MPIRUN) -np 90 ./$(EXECS) $(TEST3) 20 > err 2>&1 > out
+
 test1:
-	#$(MPIRUN) -np $(NUM_PROCESS) --hostfile $(HOSTFILE) $(EXECS) $(NUMSERVERS)
 	$(MPIRUN) --mca orte_base_help_aggregate 0 --use-hwthread-cpus -np 90 ./$(EXECS) $(TEST1) 20 > err 2>&1 > out
 
 test2:
