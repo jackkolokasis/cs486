@@ -23,7 +23,7 @@ struct _server {
 	int lead_r_reply;
 
 	int stock;
-	int active_requests;
+	int ext_supply;
 
 	int num_child;
 
@@ -100,5 +100,9 @@ void decr_stock(int val);
 int get_stock();
 
 void set_stock(int val);
+
+void set_ext_supply(int val);
+
+int get_ext_supply();
 
 #endif

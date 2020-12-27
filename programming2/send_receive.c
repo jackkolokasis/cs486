@@ -49,6 +49,10 @@ void my_send(int *msg, int rank, int tag) {
 	case SUPPLY:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
+	
+	case EXTERNAL_SUPPLY:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -526,6 +530,78 @@ void my_receive(int *msg, int rank, int num_servers) {
 				incr_stock(rcv_msg[2]);
 				prepare_msg(ack_msg, rcv_msg[0], rcv_msg[1], rcv_msg[2], 0, 0, 0);
 				MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, SUPPLY_ACK, MPI_COMM_WORLD);
+				break;
+	
+			case EXTERNAL_SUPPLY:
+				set_ext_supply(rcv_msg[0]);
+
+				if (get_stock() < 150) {
+					int req = 150 - get_stock();
+
+					if (req >= get_ext_supply()) {
+						set_stock(get_ext_supply());
+						set_ext_supply(0);
+
+						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+						break;
+					}
+					else {
+						set_stock(req);
+						set_ext_supply(get_ext_supply() - req);
+					}
+				}
+
+				prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), CHECK_SUPPLY, MPI_COMM_WORLD);
+
+				break;
+
+			case CHECK_SUPPLY:
+				if (rank == get_leader()) {
+					incr_stock(get_ext_supply());
+					set_ext_supply(0);
+
+					prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, ACK, MPI_COMM_WORLD);
+					break;
+				}
+
+				if (get_stock() < 150) {
+					int req = 150 - get_stock();
+					prepare_msg(send_msg, rank, req, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), SUPPLY_REQ, MPI_COMM_WORLD);
+				}
+				else {
+					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), CHECK_SUPPLY, MPI_COMM_WORLD);
+				}
+
+				break;
+
+			case SUPPLY_REQ:
+				if (rcv_msg[1] >= get_ext_supply()) {
+					int req = get_ext_supply();
+					set_ext_supply(0);
+
+					prepare_msg(send_msg, req, 0, 0, 0, 0, 0);
+				}
+				else {
+					int req = rcv_msg[1];
+					set_ext_supply(get_ext_supply() - req);
+
+					prepare_msg(send_msg, req, 0, 0, 0, 0, 0);
+				}
+					
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, rcv_msg[0], ACK_SUPPLY_REQ, MPI_COMM_WORLD);
+				break;
+
+			case ACK_SUPPLY_REQ:
+				incr_stock(rcv_msg[0]);
+
+				prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+				MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), CHECK_SUPPLY, MPI_COMM_WORLD);
+
 				break;
 
 			case ACK:

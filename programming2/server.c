@@ -26,6 +26,7 @@ void init_server(int id, int l_id, int r_id) {
 	server.other = NULL;
 
 	server.stock = 1000;
+	server.ext_supply = 0;
 }
 
 int server_id() {
@@ -210,4 +211,12 @@ int get_stock() {
 
 void set_stock(int val) {
 	server.stock = val;
+}
+
+void set_ext_supply(int val) {
+	server.ext_supply = val;
+}
+
+int get_ext_supply() {
+	return server.ext_supply;
 }

@@ -40,7 +40,7 @@
 #define ORDER				  4
 #define SUPPLY                5
 #define PRINT                 6
-#define EXTERNAL SUPPLY       7
+#define EXTERNAL_SUPPLY       7
 #define REPORT                8
 #define PROB_LEFT             9
 #define PROB_RIGHT            10
@@ -57,6 +57,9 @@
 #define COLLECT  		      21
 #define P_ORDER  		      22
 #define GET_SUPPLY  		  23
+#define CHECK_SUPPLY          24
+#define SUPPLY_REQ			  25
+#define ACK_SUPPLY_REQ		  26
 #define ACK                   255
 #define SUPPLY_ACK            355
 #define TERMINATE             100

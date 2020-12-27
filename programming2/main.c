@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 	int leader;							// Leader process
 	int send_msg[6];
 	int rcv_msg[6];
+	int ack_counter = 0;					// Ack counter
 	MPI_Status status;					// Mpi Status
 
 	// Initialize the MPI environment
@@ -63,6 +64,7 @@ int main(int argc, char** argv) {
 				DPRINT("%s %d %d %d\n", event, s_rank, l_rank, r_rank);
 
 				prepare_msg(send_msg, 0, s_rank, l_rank, r_rank, 0, 0);
+				ack_counter++;
 
 				// Add server to the array
 				servers[i++] = s_rank;
@@ -84,6 +86,7 @@ int main(int argc, char** argv) {
 				}
 
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
 				
 				leader = rcv_msg[0];
 				DPRINT(">>> [ACK LEADER] PID %d\n", leader);
@@ -97,10 +100,12 @@ int main(int argc, char** argv) {
 
 				// Prepare message
 				prepare_msg(send_msg, client_1, client_2, 0, 0, 0, 0);
+				ack_counter++;
 
 				my_send(send_msg, client_1, CONNECT);
 				
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
 
 				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
 			}
@@ -114,14 +119,17 @@ int main(int argc, char** argv) {
 				if (strcmp(last_event, "CONNECT") == 0) {
 					
 					prepare_msg(send_msg, leader, 0, 0, 0, 0, 0);
+					ack_counter++;
 					
 					my_send(send_msg, leader, SPANNING_TREE);
 
 					for (i = 1; i <= num_servers; i++) {
 						MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
+						ack_counter--;
 						DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
 					}
 
+						ack_counter++;
 					// Count number of clients in each server spanning tree
 					for (i = 1; i <= num_servers; i++) {
 						prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
@@ -130,14 +138,17 @@ int main(int argc, char** argv) {
 
 					// Wait for the leader to reply	
 					MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+					ack_counter--;
 					DPRINT(">>> [ACK Count] PID %d\n", rcv_msg[0]);
 				}
 				
+				ack_counter++;
 				prepare_msg(send_msg, c_rank, num, 0, 0, 0, 0);
 				my_send(send_msg, c_rank, ORDER);
 					
 				// Wait for the client to reply	
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
 				printf("CLIENT: %d | SOLD %d\n", c_rank, num);
 				DPRINT(">>> [ACK ORDER] PID %d\n", rcv_msg[0]);
 			}
@@ -148,11 +159,13 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d", event, &s_rank, &num);
 				DPRINT("%s %d %d\n", event, s_rank, num);
 
+				ack_counter++;
 				prepare_msg(send_msg, s_rank, num, 0, 0, 0, 0);
 				my_send(send_msg, s_rank, SUPPLY);
 				
 				// Wait for server to reply	
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, SUPPLY_ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
 				printf("SERVER: %d | RECEIVED %d\n", s_rank, rcv_msg[2]);
 				DPRINT(">>> [ACK SUPPLY] PID %d\n", rcv_msg[0]);
 			}
@@ -166,6 +179,20 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d", event, &num);
 				DPRINT("%s %d\n", event, num);
 
+				while(ack_counter != 0);
+
+				ack_counter++;
+
+				prepare_msg(send_msg, num, 0, 0, 0, 0, 0);
+				my_send(send_msg, leader, EXTERNAL_SUPPLY);
+
+				// Wait for the leader to reply	
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				printf("LEADER SUPPLY: %d OK\n", num);
+
+				ack_counter--;
+
+				DPRINT(">>> [ACK EXT_SUPPLY] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "REPORT") == 0) {
 				sscanf(buff, "%s", event);
