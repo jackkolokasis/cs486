@@ -45,6 +45,10 @@ void my_send(int *msg, int rank, int tag) {
 	case ORDER:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
+	
+	case SUPPLY:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+		break;
 
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
@@ -75,6 +79,7 @@ void my_receive(int *msg, int rank, int num_servers) {
 	int num_vertex = 0;					// Number of vertex
 	int total_num_vertex = 0;			// Total number of vertex from all servers
 	int count = 0;						// Counter
+	int quantity;					// Quantity and diff to supply
 
 	while(1) {
 		MPI_Recv(&rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -460,6 +465,67 @@ void my_receive(int *msg, int rank, int num_servers) {
 					prepare_msg(send_msg, rcv_msg[0], rcv_msg[1], 0, 0, 0, 0);
 					MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, P_ORDER, MPI_COMM_WORLD);
 				}
+				break;
+
+			case SUPPLY:
+				quantity = rcv_msg[1];
+
+				if (rank == rcv_msg[0] && status.MPI_SOURCE == 0) {
+					prepare_msg(send_msg, rcv_msg[0], quantity, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), SUPPLY, MPI_COMM_WORLD);
+					break;
+				}
+
+				if (rank == rcv_msg[0] && status.MPI_SOURCE == right_server_id()) {
+					// Current amount received from other servers
+					int curr_rcv_amount = rcv_msg[2];
+
+					int receive = get_stock() - 150;
+					set_stock(150);
+
+					quantity -= receive;
+					curr_rcv_amount += receive;
+					
+					prepare_msg(ack_msg, rcv_msg[0], quantity, curr_rcv_amount, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, SUPPLY_ACK, MPI_COMM_WORLD);
+					break;
+				}
+
+				if (get_stock() > (150 + quantity)) {
+					// Current amount received from other servers
+					int curr_rcv_amount = rcv_msg[2];
+
+					decr_stock(quantity);
+					
+					curr_rcv_amount += quantity;
+
+					prepare_msg(ack_msg, rcv_msg[0], 0, curr_rcv_amount, 0, 0, 0);
+					MPI_Send(ack_msg, MSG_SIZE, MPI_INT, rcv_msg[0], GET_SUPPLY, MPI_COMM_WORLD);
+				} 
+				else if (get_stock() > 150 && get_stock() < (150 + quantity)) {
+					// Current amount received from other servers
+					int curr_rcv_amount = rcv_msg[2];
+
+					int receive = get_stock() - 150;
+					set_stock(150);
+
+					quantity -= receive;
+					curr_rcv_amount += receive;
+
+					prepare_msg(send_msg, rcv_msg[0], quantity, curr_rcv_amount, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), SUPPLY, MPI_COMM_WORLD);
+				}
+				else if (get_stock() < 150) {
+					prepare_msg(send_msg, rcv_msg[0], rcv_msg[1], rcv_msg[2], 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), SUPPLY, MPI_COMM_WORLD);
+				}
+
+				break;
+
+			case GET_SUPPLY:
+				incr_stock(rcv_msg[2]);
+				prepare_msg(ack_msg, rcv_msg[0], rcv_msg[1], rcv_msg[2], 0, 0, 0);
+				MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, SUPPLY_ACK, MPI_COMM_WORLD);
 				break;
 
 			case ACK:

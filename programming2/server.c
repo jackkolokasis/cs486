@@ -202,3 +202,12 @@ void decr_stock(int val) {
 	server.stock -= val;
 
 }
+
+int get_stock() {
+	return server.stock;
+
+}
+
+void set_stock(int val) {
+	server.stock = val;
+}

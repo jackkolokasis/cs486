@@ -97,5 +97,8 @@ void incr_stock(int val);
 
 void decr_stock(int val);
 
+int get_stock();
+
+void set_stock(int val);
 
 #endif

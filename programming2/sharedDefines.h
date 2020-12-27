@@ -56,7 +56,9 @@
 #define COUNT			      20
 #define COLLECT  		      21
 #define P_ORDER  		      22
+#define GET_SUPPLY  		  23
 #define ACK                   255
+#define SUPPLY_ACK            355
 #define TERMINATE             100
 #define TOTAL                 333
 #define EXIT                  425

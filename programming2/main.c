@@ -148,13 +148,17 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d", event, &s_rank, &num);
 				DPRINT("%s %d %d\n", event, s_rank, num);
 
-
+				prepare_msg(send_msg, s_rank, num, 0, 0, 0, 0);
+				my_send(send_msg, s_rank, SUPPLY);
+				
+				// Wait for server to reply	
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, SUPPLY_ACK, MPI_COMM_WORLD, &status);
+				printf("SERVER: %d | RECEIVED %d\n", s_rank, rcv_msg[2]);
+				DPRINT(">>> [ACK SUPPLY] PID %d\n", rcv_msg[0]);
 			}
 			else if (strcmp(event, "PRINT") == 0) {
 				sscanf(buff, "%s", event);
 				DPRINT("%s\n", event);
-
-
 			}
 			else if (strcmp(event, "EXTERNAL_SUPPLY") == 0) {
 				int num;			   // Num
