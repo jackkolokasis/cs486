@@ -34,6 +34,9 @@ void my_send(int *msg, int rank, int tag) {
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
 
+	case SPANNING_TREE:
+		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
+
 	case EXIT:
 		MPI_Send(msg, MSG_SIZE, MPI_INT, rank, tag, MPI_COMM_WORLD);
 		break;
@@ -54,6 +57,10 @@ void my_receive(int *msg, int rank, int num_servers) {
 	int jl, kl, dl;				    // Id, Phase, Distance for left server
 	int jr, kr, dr;				    // Id, Phase, Distance for left server
 	int client1, client2;			// Clients
+	int p, i;
+
+	struct _child *s_tmp;			// Server children
+	struct _neighbor *c_tmp;		// Client neighbor
 
 	while(1) {
 		MPI_Recv(&rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -246,7 +253,7 @@ void my_receive(int *msg, int rank, int num_servers) {
 				DPRINT("[NEIGHBOR] %d -> %d\n", client1, client2);
 
 				if (client2 <= num_servers) {
-					add_server_child(client1);
+					insert_nbr_server(client1);
 				}
 				else {
 
@@ -262,6 +269,94 @@ void my_receive(int *msg, int rank, int num_servers) {
 				prepare_msg(send_msg, client1, client2, 0, 0, 0, 0); 
 				MPI_Send(send_msg, MSG_SIZE, MPI_INT, client1, ACK, MPI_COMM_WORLD);
 
+				break;
+
+			case SPANNING_TREE:
+				DPRINT("SPANNING_TREE\n");
+				for (i = 1; i <= num_servers; i++) {
+					// Prepare message
+					prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, i, S_TREE, MPI_COMM_WORLD);
+				}
+				break;
+
+			case S_TREE:
+				for (s_tmp = get_server_nbrs(); s_tmp != NULL; s_tmp = s_tmp->next) {
+					DPRINT("S_TREE\n");
+					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, s_tmp->id, MSG, MPI_COMM_WORLD);
+				}
+
+				break;
+
+			case MSG:
+				DPRINT("MSG\n");
+				p = rcv_msg[0];
+
+				// Prepare msg
+				prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+
+				if (!has_client_parent()) {
+					add_client_parent(p);
+
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, p, PARENT, MPI_COMM_WORLD);
+
+					for (c_tmp = get_client_nbrs(); c_tmp != NULL; c_tmp = c_tmp->next)
+						if (c_tmp->id != p)
+							MPI_Send(send_msg, MSG_SIZE, MPI_INT, c_tmp->id, MSG, MPI_COMM_WORLD);
+				}
+				else {
+					MPI_Send(send_msg, MSG_SIZE, MPI_INT, p, ALREADY, MPI_COMM_WORLD);
+				}
+				break;
+
+			case PARENT:
+				p = rcv_msg[0];
+
+				if (rank <= num_servers) {
+					add_server_child(p);
+					if (contains_server_nbrs()) { // Terminate
+						// Prepare message
+						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						break;
+					}
+				}
+				else {
+					add_client_child(p);
+					if (contains_client_nbrs()) { // Terminate
+						// Prepare message
+						// prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						// MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+						break;
+					}
+				}
+
+				break;
+
+			case ALREADY:
+				p = rcv_msg[0];
+
+				if (rank <= num_servers) {
+					add_server_other(p);
+
+					if (contains_server_nbrs()) { // Terminate
+						// Prepare message
+						prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+					}
+				}
+				else {
+
+					add_client_other(p);
+
+					if (contains_client_nbrs()) { // Terminate
+						break;
+						// Prepare message
+						//prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+						//MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+					}
+				}
 				break;
 
 			case ACK:

@@ -17,6 +17,11 @@ void init_server(int id, int l_id, int r_id) {
 	
 	server.lead_l_reply = 0;
 	server.lead_r_reply = 0;
+	
+	server.nbr = NULL;
+	server.child = NULL;
+	server.parent = NULL;
+	server.other = NULL;
 }
 
 int server_id() {
@@ -80,6 +85,10 @@ void add_server_child(int id) {
 	server.child = internal_insert_child(server.child, id);
 }
 
+void add_server_other(int id) {
+	server.other = internal_insert_child(server.other, id);
+}
+
 struct _child* internal_insert_child(struct _child *head, int id) {
 	struct _child *tmp = NULL;
 
@@ -106,11 +115,20 @@ void print_server() {
 	printf(" LEFT SERVER ID: %d\n", server.l_rank);
 	printf(" RIGHT SERVER ID: %d\n", server.r_rank);
 	printf(" LEADER ID: %d\n", server.leader);
-	printf(" CHILD: ");
+	printf(" NEIGHBORS: ");
 
-	for (tmp = server.child; tmp != NULL; tmp = tmp->next) {
+	for (tmp = server.nbr; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
-	}
+
+	printf(" CHILDREN: ");
+
+	for (tmp = server.child; tmp != NULL; tmp = tmp->next)
+		printf("%d ", tmp->id);
+	
+	printf(" OTHER: ");
+
+	for (tmp = server.other; tmp != NULL; tmp = tmp->next)
+		printf("%d ", tmp->id);
 
 	printf("\n==========================================\n");
 }
@@ -129,4 +147,32 @@ int is_server_leader_l_reply() {
 
 int is_server_leader_r_reply() {
 	return server.lead_r_reply;
+}
+
+struct _child* get_server_nbrs() {
+	return server.nbr;
+}
+
+// Insert a new neighbor client with `id` in the list of neighbors of the server
+void insert_nbr_server(int id) {
+	server.nbr = internal_insert_child(server.nbr, id);
+}
+
+int contains_server_nbrs() {
+	int sum_nbrs = 0;
+	int sum_child = 0;
+	int sum_other = 0;
+	
+	struct _child *tmp;
+
+	for (tmp = server.nbr; tmp != NULL; tmp = tmp->next)
+		sum_nbrs += tmp->id;
+
+	for (tmp = server.child; tmp != NULL; tmp = tmp->next)
+		sum_child += tmp->id;
+	
+	for (tmp = server.other; tmp != NULL; tmp = tmp->next)
+		sum_other += tmp->id;
+
+	return (sum_nbrs == sum_child + sum_other);
 }

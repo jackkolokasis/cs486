@@ -48,7 +48,13 @@
 #define REPLY_RIGHT           12
 #define LEADER                13
 #define NEIGHBOR              14
+#define SPANNING_TREE         15
+#define S_TREE                16
+#define MSG			          17
+#define PARENT			      18
+#define ALREADY			      19
 #define ACK                   255
+#define TERMINATE             100
 #define EXIT                  425
 
 #define MSG_SIZE 6		  // Message size

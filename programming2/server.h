@@ -26,8 +26,9 @@ struct _server {
 	int active_requests;
 
 	struct _child *child;
-
-	
+	struct _child *nbr;
+	struct _child *parent;
+	struct _child *other;
 };
 
 struct _server server;
@@ -62,13 +63,6 @@ void make_leader();
 
 int is_leader();
 
-void add_server_child(int id);
-
-struct _child* internal_insert_child(struct _child *head, int id);
-
-void print_server();
-
-
 void set_server_leader_l_reply(int val);
 
 void set_server_leader_r_reply(int val);
@@ -77,7 +71,19 @@ int is_server_leader_l_reply();
 
 int is_server_leader_r_reply();
 
+struct _child* internal_insert_child(struct _child *head, int id);
+
+void print_server();
 
 
+struct _child* get_server_nbrs();
+
+void insert_nbr_server(int id);
+
+void add_server_child(int id);
+
+void add_server_other(int id);
+
+int contains_server_nbrs();
 
 #endif

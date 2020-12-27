@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <math.h>
 #include "sharedDefines.h"
@@ -12,7 +13,8 @@ int main(int argc, char** argv) {
 	int num_process;					// Total number of process
 	int rank;						    // Rank of the process
 	char buff[BUFFER_SIZE];      		// Buffer for each line
-	char event[SIZE];					// Task
+	char event[SIZE];					// Event task
+	char last_event[SIZE];				// Last event task
 	FILE *fp;							// File pointer
 	int *servers;						// Servers Ids
 	int num_servers;					// Total number of servers
@@ -83,7 +85,8 @@ int main(int argc, char** argv) {
 
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 				
-				DPRINT(">>> [ACK LEADER] PID %d\n", rcv_msg[0]);
+				leader = rcv_msg[0];
+				DPRINT(">>> [ACK LEADER] PID %d\n", leader);
 			}
 			else if (strcmp(event, "CONNECT") == 0) {
 				int client_1;				// Client rank
@@ -91,7 +94,6 @@ int main(int argc, char** argv) {
 
 				sscanf(buff, "%s %d %d", event, &client_1, &client_2);
 				DPRINT("%s %d %d\n", event, client_1, client_2);
-
 
 				// Prepare message
 				prepare_msg(send_msg, client_1, client_2, 0, 0, 0, 0);
@@ -101,8 +103,6 @@ int main(int argc, char** argv) {
 				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
 
 				DPRINT(">>> [ACK] PID %d\n", rcv_msg[0]);
-
-
 			}
 			else if (strcmp(event, "ORDER") == 0) {
 				int c_rank;				// Client rank
@@ -111,7 +111,20 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d", event, &c_rank, &num);
 				DPRINT("%s %d %d\n", event, c_rank, num);
 
+					DPRINT(">>> %s <<<<< \n", last_event);
+				if (strcmp(last_event, "CONNECT") == 0) {
+					DPRINT(">>> CHECK <<<<< \n");
+					
+					// Prepare msg
+					prepare_msg(send_msg, leader, 0, 0, 0, 0, 0);
+					
+					my_send(send_msg, leader, SPANNING_TREE);
 
+					for (i = 1; i <= num_servers; i++) {
+						MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
+						DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
+					}
+				}
 			}
 			else if (strcmp(event, "SUPPLY") == 0) {
 				int s_rank;				// Server rank
@@ -143,6 +156,8 @@ int main(int argc, char** argv) {
 				DPRINT("Invalid option");
 				break;
 			}
+
+			strcpy(last_event, event);
 		} 
 	}
 	else if (rank > 0 && rank <= num_servers){

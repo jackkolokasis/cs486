@@ -9,6 +9,9 @@ void new_client(int id) {
 	exist = 1;
 	client.id = id;
 	client.nbr = NULL;
+	client.child = NULL;
+	client.parent = NULL;
+	client.other = NULL;
 }
 
 int client_alive() { return exist; }
@@ -47,6 +50,67 @@ void print_client() {
 	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next) {
 		printf("%d ", tmp->id);
 	}
+	
+	printf(" PARENTS: ");
+
+	for (tmp = client.parent; tmp != NULL; tmp = tmp->next) {
+		printf("%d ", tmp->id);
+	}
+	
+	printf(" CHILDREN: ");
+
+	for (tmp = client.child; tmp != NULL; tmp = tmp->next) {
+		printf("%d ", tmp->id);
+	}
+	
+	printf(" OTHER: ");
+
+	for (tmp = client.other; tmp != NULL; tmp = tmp->next) {
+		printf("%d ", tmp->id);
+	}
 
 	printf("\n==========================================\n");
+}
+
+void add_client_child(int id) {
+	client.child = internal_insert_nbr(client.child, id);
+}
+
+void add_client_parent(int id) {
+	client.parent = internal_insert_nbr(client.parent, id);
+}
+
+int has_client_parent() {
+	return client.parent != NULL;
+}
+
+struct _neighbor* get_client_nbrs() {
+	return client.nbr;
+}
+
+void add_client_other(int id) {
+	client.other = internal_insert_nbr(client.other, id);
+}
+
+int contains_client_nbrs() {
+	int sum_nbrs = 0;
+	int sum_child = 0;
+	int sum_other = 0;
+	int sum_par = 0;
+	
+	struct _neighbor *tmp;
+
+	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next)
+		sum_nbrs += tmp->id;
+
+	for (tmp = client.child; tmp != NULL; tmp = tmp->next)
+		sum_child += tmp->id;
+
+	for (tmp = client.other; tmp != NULL; tmp = tmp->next)
+		sum_other += tmp->id;
+	
+	for (tmp = client.parent; tmp != NULL; tmp = tmp->next)
+		sum_par += tmp->id;
+	
+	return (sum_nbrs - sum_par == sum_child + sum_other);
 }
