@@ -315,6 +315,13 @@ void my_receive(int *msg, int rank, int num_servers) {
 				break;
 
 			case S_TREE:
+                if (get_server_nbrs() == NULL) {
+                    prepare_msg(ack_msg, rank, 0, 0, 0, 0, 0);
+                    MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), TOTAL, MPI_COMM_WORLD);
+                    MPI_Send(ack_msg, MSG_SIZE, MPI_INT, 0, TERMINATE, MPI_COMM_WORLD);
+                    break;
+                }
+
 				for (s_tmp = get_server_nbrs(); s_tmp != NULL; s_tmp = s_tmp->next) {
 					DPRINT("S_TREE\n");
 					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
@@ -533,7 +540,7 @@ void my_receive(int *msg, int rank, int num_servers) {
 					prepare_msg(send_msg, rcv_msg[0], quantity, curr_rcv_amount, 0, 0, 0);
 					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), SUPPLY, MPI_COMM_WORLD);
 				}
-				else if (get_stock() < 150) {
+				else if (get_stock() <= 150) {
 					prepare_msg(send_msg, rcv_msg[0], rcv_msg[1], rcv_msg[2], 0, 0, 0);
 					MPI_Send(send_msg, MSG_SIZE, MPI_INT, left_server_id(), SUPPLY, MPI_COMM_WORLD);
 				}
@@ -638,6 +645,10 @@ void my_receive(int *msg, int rank, int num_servers) {
 
 				if (rank <= num_servers) {
 					prepare_msg(send_msg, rank, 0, 0, 0, 0, 0);
+                    if (get_server_children() == NULL) {
+                        MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), TOTAL_REPORT, MPI_COMM_WORLD);
+                        break;
+                    }
 					for (s_tmp = get_server_children(); s_tmp != NULL; s_tmp = s_tmp->next) {
 						MPI_Send(send_msg, MSG_SIZE, MPI_INT, s_tmp->id, REPORT, MPI_COMM_WORLD);
 					}
@@ -666,12 +677,14 @@ void my_receive(int *msg, int rank, int num_servers) {
 
 				if (rank <= num_servers) {
 					if (replies == num_server_child()) {
+                        replies = 0;
 						prepare_msg(send_msg, rank, purchases, 0, 0, 0, 0);
 						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_leader(), TOTAL_REPORT, MPI_COMM_WORLD);
 					}
 				}
 				else {
 					if (replies == num_client_child()) {
+                        replies = 0;
 						purchases += get_purchase();
 						prepare_msg(send_msg, rank, purchases, 0, 0, 0, 0);
 						MPI_Send(send_msg, MSG_SIZE, MPI_INT, get_client_parent()->id, REP_COLLECT, MPI_COMM_WORLD);

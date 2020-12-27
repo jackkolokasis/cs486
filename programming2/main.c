@@ -176,7 +176,9 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s", event);
 				DPRINT("%s\n", event);
 
-				while (ack_counter != 0); 
+				while (ack_counter != 0) { 
+                    DPRINT("ACK_COUNTER = %d\n", ack_counter);
+                }; 
 
 				ack_counter ++;
 
