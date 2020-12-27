@@ -46,28 +46,20 @@ void print_client() {
 	printf("==========================================\n");
 	printf(" CLIENT ID: %d\n", client.id);
 	printf(" NEIGHBORS: ");
-
-	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next) {
+	for (tmp = client.nbr; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
-	}
 	
-	printf(" PARENTS: ");
-
-	for (tmp = client.parent; tmp != NULL; tmp = tmp->next) {
+	printf("\n PARENTS: ");
+	for (tmp = client.parent; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
-	}
+
+	printf("\n CHILDREN: ");
+	for (tmp = client.child; tmp != NULL; tmp = tmp->next)
+		printf("%d ", tmp->id);
 	
-	printf(" CHILDREN: ");
-
-	for (tmp = client.child; tmp != NULL; tmp = tmp->next) {
+	printf("\n OTHER: ");
+	for (tmp = client.other; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
-	}
-	
-	printf(" OTHER: ");
-
-	for (tmp = client.other; tmp != NULL; tmp = tmp->next) {
-		printf("%d ", tmp->id);
-	}
 
 	printf("\n==========================================\n");
 }

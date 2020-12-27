@@ -115,18 +115,16 @@ void print_server() {
 	printf(" LEFT SERVER ID: %d\n", server.l_rank);
 	printf(" RIGHT SERVER ID: %d\n", server.r_rank);
 	printf(" LEADER ID: %d\n", server.leader);
-	printf(" NEIGHBORS: ");
 
+	printf(" NEIGHBORS: ");
 	for (tmp = server.nbr; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
 
-	printf(" CHILDREN: ");
-
+	printf("\n CHILDREN: ");
 	for (tmp = server.child; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
 	
-	printf(" OTHER: ");
-
+	printf("\n OTHER: ");
 	for (tmp = server.other; tmp != NULL; tmp = tmp->next)
 		printf("%d ", tmp->id);
 
