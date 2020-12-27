@@ -54,6 +54,32 @@ int main(int argc, char** argv) {
 		while (fgets(buff, BUFFER_SIZE, fp)) {
 			sscanf(buff, "%s", event);
 			DPRINT(">>>> %s\n", event);
+				
+			if (strcmp(last_event, "CONNECT") == 0 && !(strcmp(event, "CONNECT") == 0)) {
+
+				prepare_msg(send_msg, leader, 0, 0, 0, 0, 0);
+				ack_counter++;
+
+				my_send(send_msg, leader, SPANNING_TREE);
+
+				for (i = 1; i <= num_servers; i++) {
+					MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
+					ack_counter--;
+					DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
+				}
+
+				ack_counter++;
+				// Count number of clients in each server spanning tree
+				for (i = 1; i <= num_servers; i++) {
+					prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
+					my_send(send_msg, i, COUNT);
+				}
+
+				// Wait for the leader to reply	
+				MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
+				ack_counter--;
+				DPRINT(">>> [ACK Count] PID %d\n", rcv_msg[0]);
+			}
 
 			if (strcmp(event, "SERVER") == 0) {
 			    int s_rank;             // Server rank
@@ -116,31 +142,6 @@ int main(int argc, char** argv) {
 				sscanf(buff, "%s %d %d", event, &c_rank, &num);
 				DPRINT("%s %d %d\n", event, c_rank, num);
 
-				if (strcmp(last_event, "CONNECT") == 0) {
-					
-					prepare_msg(send_msg, leader, 0, 0, 0, 0, 0);
-					ack_counter++;
-					
-					my_send(send_msg, leader, SPANNING_TREE);
-
-					for (i = 1; i <= num_servers; i++) {
-						MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, TERMINATE, MPI_COMM_WORLD, &status);
-						ack_counter--;
-						DPRINT(">>> [TERMINATE] PID %d\n", rcv_msg[0]);
-					}
-
-						ack_counter++;
-					// Count number of clients in each server spanning tree
-					for (i = 1; i <= num_servers; i++) {
-						prepare_msg(send_msg, i, 0, 0, 0, 0, 0);
-						my_send(send_msg, i, COUNT);
-					}
-
-					// Wait for the leader to reply	
-					MPI_Recv(rcv_msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, ACK, MPI_COMM_WORLD, &status);
-					ack_counter--;
-					DPRINT(">>> [ACK Count] PID %d\n", rcv_msg[0]);
-				}
 				
 				ack_counter++;
 				prepare_msg(send_msg, c_rank, num, 0, 0, 0, 0);
