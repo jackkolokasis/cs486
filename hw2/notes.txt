@@ -241,3 +241,59 @@ Message Complextity: O(m*n)
 Time Complextity: O(diam)
 
 
+Present event-driven pseudo-code that does the following: For all k, 1
+≤ k ≤ dist, it counts the number of nodes that are in distance k from
+a distinct node p r , where dist is the longest distance of p r from
+any other node in the graph. When the algorithm terminates, p r should
+know dist and for every k, it should also know how many nodes are in
+distance k from it.
+
+Code for process p_i
+Initially, 
+
+var count = 0;
+
+if (p_i == p_r)
+	parent_i = nill
+	replies = 0;
+	phase = 0;
+else
+	dist_i = \inf{}
+
+upon receiving no message:
+	if (pi == pr) and (parent_i == null) then
+		send <SEARCH> to all neighbors;
+		parent_i = pi
+
+upon receiving <SEARCH> from neighbor pj:
+	if (parent_i == NULL)
+		parent_i = pj;
+		send <ACK, 1> to pj
+	else if (parent_i == pj)
+			send <SEARCH> to all children except pj
+	else if 
+			send <NACK> to pj
+
+upon receiving <ACK, num> from neighbor pj:
+	replies ++
+	count += num
+
+	if pj not in the childrens set:
+		add pj to childrens
+
+	if (parent_i == pi)
+		if (replies == num_of_neighbors)
+			replies = 0;
+			phase ++
+			if (phase < k)
+				send <SEARCH> to all children
+			else
+				terminate
+	else
+		if (replies == num_of_neighbors - 1) // except parent
+			replies = 0;
+			send <ACK, count> to pj
+			count = 0
+
+upon receiving <NACK> from neighbor pj
+	replies ++
