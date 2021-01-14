@@ -1,0 +1,183 @@
+Exercise 4:
+-----------
+
+A(i).
+Events:
+	f16 -> f3
+	f5 -> f18
+	f17 -> f6
+
+ (ii).
+	f1    = 0
+	f2    = 1
+	f3    = 3
+	f4    = 4
+	f5    = 5
+	f6    = 7
+	f7    = 8
+	f8    = 0
+	f9    = 1
+	f10   = 2
+	f11   = 3
+	f12   = 4
+	f13   = 9
+	f14   = 10
+	f15   = 0
+	f16   = 1
+	f17   = 2
+	f18   = 6
+	f19   = 7
+	f20   = 8
+
+ (iii).
+	f1    = 
+	f2    = 
+	f3    = 
+	f4    = 
+	f5    = 
+	f6    = 
+	f7    = 
+	f8    = 
+	f9    = 
+	f10   = 
+	f11   = 
+	f12   = 
+	f13   = 
+	f14   = 
+	f15   = 
+	f16   = 
+	f17   = 
+	f18   = 
+	f19   = 
+	f20   = 
+
+Use a counterexample to show that the correctness of the algorithm
+does not hold when the channels are not FIFO.
+
+Let's have an example with two processes P1 and P2. P1 send a message
+M1 to P2. The message M1 was delivered after a later-sent application
+message. Because of this reordering, the recorded global state is
+inconsistent
+
+Propose a modification of the Chandy-Lamport Algorithm that works
+correctly when the channels are not FIFO. Provide pseudocode for your
+solution and explain your reasoning.
+
+By recording the messages in the process states, we can ignore
+flushing channels. In this model, the original CL algorithm is:
+
+p0: send "SS" to self
+
+pi: when receive "SS" for first time (from pj) {
+      record state
+      send "SS" to all neighbors
+      for each neighbor except pj wait for "SS"
+      }
+
+This assumes FIFO channels. To accommodate non-FIFO channels, we just
+have to ensure that the delivery of the snapshot message does not get
+moved after the delivery of subsequent messages. The easiest way to do
+this is to block sending application messages until the snapshot is
+complete. We define a set BLOCK for each process p. For each process q
+in BLOCK, p will block all sends to q until q is no longer in BLOCK.
+
+p0: send "SS" to self
+
+pi: when receive "SS" for first time (from pj) {
+      record state
+      BLOCK = all neighbors - { pj }
+      send "SS" to all neighbors
+      while (BLOCK != 0) {
+        when receive "SS" (from pk)
+          BLOCK = BLOCK - { pk }
+        }
+      }
+
+Exercise 1:
+------------
+
+var depth = 0;
+var replies = 0;
+var num_leafs = 0;
+
+// Constructed spanning tree
+upon receive no message:
+	if pi == pr && parent == null then
+		send <M> to all neighbors
+		parent = pi
+
+upon receiving <M> from neighbor pj:
+	if parent == NULL then
+		parent = pj
+		send <parent> to pj
+		if count(neighbors) > 1
+			depth = 1;
+			send <M> to all neighbors except pj
+	else
+		send <already> to pj
+
+upon receiving <parent> from neighbor pj:
+	add pj to children
+	if children U other contains all neighbors except parent then
+		terminate
+
+upon receiving <already> from neighbor pj:
+	add pj to other
+	if children U other contains all neighbors except parent then
+		terminate
+
+// Calculate leafs
+upon receive no message:
+	if pi == pr && parent == null then
+		send <M> to all childrens
+
+upon receiving <M> from parent pj
+	if has_no_children 
+		send <Leaf, 1, depth> to parent pj
+	else 
+		send <M> to all childrens
+
+upon receiving <Leaf, count, d> from children pj
+	replies ++;
+	num_leafs += count
+
+	depth -= d
+
+	if replies == childrens
+		if parent == null
+			if (depth == 1)
+				return TRUE
+			else 
+				return FALSE
+		else 
+			if (depth == 1)
+				send <Leaf, num_of_leaf, 0> to parent
+			else 
+				send <Leaf, num_of_leaf, depth> to parent
+
+Communication complexity:
+Creation of Spanning Tree: O(m*n)
+Count Leafs: (2n-1)
+
+Time complexity:
+Creation of Spanning Tree: O(diam)
+Count Leafs: (O(hight) height is the length of the longest path
+
+Exercise 2:
+------------
+Present event-driven pseudo-code for counting the number of nodes in
+an Asynchronous System given an Unrooted Spanning Tree of the system
+(see slide 6 in Section Advanced Graph Algorithms). What is the
+communication complexity and the time complexity of your algorithm?
+Justify your answer.
+
+A convergecast of <elect> messages is initiated starting from the
+leaves of the tree.
+
+leaf node:
+	send <ELECT> to neighbor pj
+
+upon receiving <ELECT> message from neighbor pj:
+	start from p
+
+
