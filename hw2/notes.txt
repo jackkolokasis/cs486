@@ -297,3 +297,49 @@ upon receiving <ACK, num> from neighbor pj:
 
 upon receiving <NACK> from neighbor pj
 	replies ++
+
+Exercise 3:
+-----------
+Initialy each process has:
+v = id
+status = active
+phase = 0;
+received = 0
+rcv_val[2] = {0, 0} // rcv_val[1]: Value of the first left node 
+					// rcv_val[0]: Value of the second left node
+leader = false;
+
+upon receiving no message:
+	if (status == active )
+		send <M, v, phase, 2> to right
+
+upon receiving <M, value, phaseId, counter> from left
+	if (status == active) {
+		if (counter > 0) {
+			received++
+			counter--
+			rcv_val[counter] = value
+			send <M, value, phaseId, counter> to right
+		}
+
+		if (received == 2 && state == active) {
+			if (rcv_val[1] == v) {
+				leader = true
+				terminate
+			}
+
+			if (rcv_val[1] > rcv_val[0] && rcv_val[1] > v) {
+				v  = rcv_val[1];
+				phase++;
+				send <M, v, phase, 2> to right
+			}
+			else {
+				state = relay 
+			}
+		}
+	}
+	else
+		send (M, value, phaseId, counter) to right
+
+Message complexity: O(n^2)
+Time complexity: O(n)
