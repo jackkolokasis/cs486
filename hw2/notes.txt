@@ -202,52 +202,17 @@ from any other node in the graph. What is the communication complexity
 and the time complexity of your algorithm? Justify your answer. Your
 algorithm should not assume knowledge of dist.
 
-var k;
-var counter; 
-bool check;
-var replies;
-
-upon receive no message
-	if (p == pr)
-		send <M, 1, pr_id> to all neighbors
-
-upon receiving <M, num, pr_id> from neighbor pj
-	if (num < k)
-		send <M, num, pr_id> to all neighbors except pj
-	else (num == k)
-		if pj is the only neighbor
-			send <NBR, 0> to pr_id
-		else
-			send <COUNT, 0, pr_id, id> to all neighbors except pr_id
-
-upon receiving <COUNT, num, pr_id, pid> from neighbor pj
-	if pj is the only neighbor
-		send <NBR, 0, pr_id, pid> to pj
-	else 
-		send <COUNT, 0, pr_id, id> to all neighbors except pj
-
-upon receiving <NBR, num, pr_id, pid> from neighbor pj
-	if (id == pid)
-		counter += num;
-	else if (id == pr_id)
-		if (counter == num)
-			
-			return true
-		else
-			return false
-	else
-		counter += num;
-		if (replies == num_of_neighbors -1)
-			send <NBR
-
 Code for process p_i
 Initially, 
 
 if (p_i == p_r)
 	parent_i = nill
 	dist_i = 0 
+	replies = 0;
+	Vector neighbors[];
+	check = false;
 else
-	dist_i = ∞
+	dist_i = \inf{}
 
 upon receiving no message:
 if (pi == pr) and (parenti == null) then
@@ -258,4 +223,21 @@ upon receiving <M> from neighbor pj:
 	if (m+1 < dist_i) then
 		dist_i = m+1;
 		parent_i = pj;
+		if (dist_i == k)
+			send <NBR, (num_of_neighbors - 1) > to parent_i
 		send <dist_i> to all neighbors except pj
+
+upon receiving <NBR, num> from neighbor pj:
+	if (parent i != id)
+		send <NBR, num> to parent_i
+	else
+		neighbors[replies] = num_nodes
+		replies++;
+		if (replies == num_of_neighbors)
+			return true if all elements in the neighbors vector are
+			the same
+
+Message Complextity: O(m*n)
+Time Complextity: O(diam)
+
+
