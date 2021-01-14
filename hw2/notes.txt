@@ -6,6 +6,7 @@ Events:
 	f16 -> f3
 	f5 -> f18
 	f17 -> f6
+	f15 -> f6
 
  (ii).
 	f1    = 0
@@ -174,10 +175,87 @@ Justify your answer.
 A convergecast of <elect> messages is initiated starting from the
 leaves of the tree.
 
-leaf node:
-	send <ELECT> to neighbor pj
+var replies = 0;
+var leader = 0;
 
-upon receiving <ELECT> message from neighbor pj:
-	start from p
+every leaf node:
+	send <ELECT, UID, 1> to neighbor pj
 
+upon receiving <ELECT, UID, COUNT> message from neighbor pj:
+	nodes += COUNT;
+	if (replies == num_leafs)
+		start from pj to send<ELECT, UID, COUNT> to remaining neighbors
+		terminate
 
+	if (replies == num_of_neighbors)
+		if (_uid > UID)
+			return nodes + 1;
+			terminate
+
+Message Complexity: n messages
+Time Complexity: O (n(l+d))
+
+Present event-driven pseudo-code that checks whether all nodes at
+distance k from a distinct node pr have the same number of neighbors.
+Assume that 1 ≤ k ≤ dist, where dist is the longest distance of p r
+from any other node in the graph. What is the communication complexity
+and the time complexity of your algorithm? Justify your answer. Your
+algorithm should not assume knowledge of dist.
+
+var k;
+var counter; 
+bool check;
+var replies;
+
+upon receive no message
+	if (p == pr)
+		send <M, 1, pr_id> to all neighbors
+
+upon receiving <M, num, pr_id> from neighbor pj
+	if (num < k)
+		send <M, num, pr_id> to all neighbors except pj
+	else (num == k)
+		if pj is the only neighbor
+			send <NBR, 0> to pr_id
+		else
+			send <COUNT, 0, pr_id, id> to all neighbors except pr_id
+
+upon receiving <COUNT, num, pr_id, pid> from neighbor pj
+	if pj is the only neighbor
+		send <NBR, 0, pr_id, pid> to pj
+	else 
+		send <COUNT, 0, pr_id, id> to all neighbors except pj
+
+upon receiving <NBR, num, pr_id, pid> from neighbor pj
+	if (id == pid)
+		counter += num;
+	else if (id == pr_id)
+		if (counter == num)
+			
+			return true
+		else
+			return false
+	else
+		counter += num;
+		if (replies == num_of_neighbors -1)
+			send <NBR
+
+Code for process p_i
+Initially, 
+
+if (p_i == p_r)
+	parent_i = nill
+	dist_i = 0 
+else
+	dist_i = ∞
+
+upon receiving no message:
+if (pi == pr) and (parenti == null) then
+	send <0> to all neighbors;
+	parenti = pi
+
+upon receiving <M> from neighbor pj:
+	if (m+1 < dist_i) then
+		dist_i = m+1;
+		parent_i = pj;
+		send <dist_i> to all neighbors except pj
