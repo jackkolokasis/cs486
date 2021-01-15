@@ -1,2 +1,155 @@
-\section*{Exercise C}
+\section*{Exercise 3A(i)}
 
+\begin{lstlisting}[style=mycode]
+Initialy each process has:
+v = id
+status = active
+phase = 0;
+received = 0
+rcv_val[2] = {0, 0} // rcv_val[1]: Value of the first left node 
+					// rcv_val[0]: Value of the second left node
+leader = false;
+
+upon receiving no message:
+	if (status == active )
+		send <M, v, phase, 2> to right
+
+upon receiving <M, value, phaseId, counter> from left
+	if (status == active) {
+		if (counter > 0) {
+			received++
+			counter--
+			rcv_val[counter] = value
+			send <M, value, phaseId, counter> to right
+		}
+
+		if (received == 2 && state == active) {
+			if (rcv_val[1] == v) {
+				received = 0
+				leader = true
+				terminate
+			}
+
+			if (rcv_val[1] > rcv_val[0] && rcv_val[1] > v) {
+				v  = rcv_val[1];
+				phase++;
+				received = 0
+				send <M, v, phase, 2> to right
+			}
+			else {
+				state = relay 
+			}
+		}
+	}
+	else
+		send (M, value, phaseId, counter) to right
+\end{lstlisting}
+
+\section*{Exercise 3A(ii)}
+\paragraph{Message complexity:} $O(n^2)$, in the worst case because we
+send message to all nodes in the right. Although innactive nodes
+forward messages to the right.
+
+\section*{Exercise 3A(iii)}
+\paragraph{Time complexity:} $O(n)$, the time needed by the last node
+in the ring to get the message. So, is the time that needs a message
+to traverse the entire ring. 
+
+\section*{Exercise 3B(i)}
+
+\begin{lstlisting}[style=mycode]
+
+Initialy each process has:
+v = id
+status = active
+phase = 0;
+received = 0
+rcv_val[2] = {0, 0} // rcv_val[1]: Value of the right node 
+					// rcv_val[0]: Value of the left node
+leader = false;
+
+upon receiving no message
+	if (status == active)
+		rcv_val[0] = id of the left node
+		rcv_val[1] = id of the right node
+
+		if (rcv_val[0] > rcv_val[1] && rcv_val[0] > v)
+			v = rcv_val[0]
+			phase++
+			rcv_val[0] = -1
+			rcv_val[1] = -1
+			send <M, 0, -1> to left and right nodes
+		else
+			state = relay
+
+upon receiving <M, counter, val> from right
+	if (state == relay)
+		if (val == -1)
+			counter++
+			send <M, counter, val> to left
+		else
+			counter--
+			send <M, counter, val> to right
+
+	else
+		if (count > 0)
+			count--
+			send <M, counter, v> to right
+		else 
+			if (rcv_val[0] != -1 &&  rcv_val[1] != -1) {
+				if (rcv_val[0] == v)
+					terminate as the leader
+
+				if (rcv_val[0] > rcv_val[1] && rcv_val[0] > v)
+					v = rcv_val[0]
+					phase++
+					rcv_val[0] = -1
+					rcv_val[1] = -1
+					send <M, 0, -1> to left and right nodes
+				else
+					state = relay
+			}
+			else
+				rcv_val[1] = val
+
+upon receiving <M, counter, val> from left
+	if (state == relay)
+		if (val == -1)
+			counter++
+			send <M, counter, val> to right
+		else
+			counter--
+			send <M, counter, val> to left
+
+	else
+		if (count > 0)
+			count--
+			send <M, counter, v> to left
+		else 
+			if (rcv_val[0] != -1 &&  rcv_val[1] != -1) {
+				if (rcv_val[0] == v)
+					terminate as the leader
+
+				if (rcv_val[0] > rcv_val[1] && rcv_val[0] > v)
+					v = rcv_val[0]
+					phase++
+					rcv_val[0] = -1
+					rcv_val[1] = -1
+					send <M, 0, -1> to left and right nodes
+				else
+					state = relay
+			}
+			else
+				rcv_val[0] = val
+
+\end{lstlisting}
+
+\section*{Exercise 3B(ii)}
+\paragraph{Message complexity:} $O(n^2)$, in the worst case because we
+send message to all nodes in the left and right. Although innactive nodes
+forward messages to the right.
+
+\section*{Exercise 3B(iii)}
+\paragraph{Time complexity:} $O(n)$, the time needed by the last node
+in the ring to get the message. So, is the time that needs a message
+to traverse the entire ring. 
