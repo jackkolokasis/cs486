@@ -1,0 +1,104 @@
+\section*{Exercise 1(i)}
+
+\begin{lstlisting}[style=mycode]
+Every process (p) has the following variables
+
+var depth = 0;
+var replies = 0;
+var num_leafs = 0;
+
+// First construct spanning tree. The following four methods are used
+to construct the rooted spanning tree.
+upon receiving no message:
+	if pi == pr && parent == null then
+		send <M> to all neighbors
+		parent = pi
+
+upon receiving <M> from neighbor pj:
+	if parent == NULL then
+		parent = pj
+		send <parent> to pj
+		if neighbors.size() > 1 then
+			depth = 1;
+			send <M> to all neighbors except pj
+	else
+		send <already> to pj
+
+upon receiving <parent> from neighbor pj:
+	add pj to children
+	if children U other contains all neighbors except parent then
+		terminate
+
+upon receiving <already> from neighbor pj:
+	add pj to other
+	if children U other contains all neighbors except parent then
+		terminate
+
+// Calculate the number of leafs in each subtree and then broadcast
+// the value to the leader node. The leader node will decide if
+// the leafs are in the same level
+upon receive no message:
+	if pi == pr && parent == null then
+		send <M> to all childrens
+
+upon receiving <M> from parent pj
+	if has_no_children 
+		send <Leaf, 1, depth> to parent pj
+	else 
+		send <M> to all childrens
+
+upon receiving <Leaf, count, d> from children pj
+	replies ++;
+	num_leafs += count
+
+	depth -= d
+
+	if replies == childrens
+		if parent == null
+			// If the depth == 1 that means that all leafs are in the
+			// same level. So broadcast this information to all
+			// processes in the spanning tree.
+			if (depth == 1)
+				send<LEVEL, true> to all children
+			else 
+				send<LEVEL, false> to all children
+		else 
+			if (depth == 1)
+				send <Leaf, num_leafs, 0> to parent
+			else 
+				send <Leaf, num_leafs, depth> to parent
+
+upon receiving <LEVEL, is_same_level> from parent pj
+	send<LEVEL, is_same_level> to all children
+	
+\end{lstlisting}
+
+\section*{Exercise 1(ii): Communication complexity}
+
+\paragraph{Creation of Spanning Tree:} O(m*n)
+
+\paragraph{Count Number of Leafs:} $O(n - 1 + n + n - 1)$, where
+$\textbf{(n - 1)}$ are the messages that are sent from the root to all
+the processes to count the number of leafs and calculate the depth,
+%
+$\textbf{(n)}$ is the total messages send from the leafs until the
+root calculating the number of leafs in each subtree and check if the
+leafs are on the same level, and
+%
+$\textbf{(n - 1)}$ are the total number of messages that are sent from
+the root to the leafs of the spanning tree to inform all the processes
+if the leafs are on the same level.
+
+\medskip
+So, $\textbf{Communication Complexity = O(3n - 2) = O(n)} $
+
+\section*{Exercise 1(iii): Time complexity}
+\paragraph{Creation of Spanning Tree:} $O(d)$, where $\textbf{d}$ is
+the diameter of the graph. The length of the longest of the shortest
+path between any two vertices.
+\paragraph{Count Leafs and depth:} $O(h)$, where $\textbf{h}$ is the
+height of the tree (the length of the longest path from the root to
+leaf)
+
+\medskip
+So, $\textbf{Time Complexity = O(d + h)} $

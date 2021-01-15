@@ -1,0 +1,130 @@
+\section*{Exercise 2(i)}
+
+\begin{lstlisting}[style=mycode]
+// A convergecast of <ELECT> messages is initiated starting from the
+// leaf of the tree.
+
+Every process (p) in the system has the following variables
+var replies = 0;
+var leader = 0;
+
+upon receiving no message:
+	if (neighbors.size() == 1)
+		send <ELECT, 1> to neighbor pj
+
+upon receiving <ELECT, COUNT> message from neighbor pj:
+	nodes += COUNT;
+	if (replies == (num_of_neighbors -1))
+		start from pj to send<ELECT, nodes + 1> to remaining neighbors
+		terminate
+
+	if (replies == num_of_neighbors)
+		return nodes + 1 and terminate
+\end{lstlisting}
+
+\paragraph{Message Complexity:} $O(n)$, where $\textbf{n}$ is the
+total number of nodes
+\paragraph{Time Complexity:} $O(d)$, where ${\textbf{d}}$ is the
+longest path of the graph that will send a message
+
+\section*{Exercise 2(ii)}
+
+\begin{lstlisting}[style=mycode]
+Code for process p_i
+Initially, 
+
+if (p_i == p_r)
+	parent_i = nill
+	dist_i = 0 
+	replies = 0;
+	Vector neighbors[];
+	check = false;
+else
+	dist_i = \inf{}
+
+upon receiving no message:
+if (pi == pr) and (parenti == null) then
+	send <0> to all neighbors;
+	parenti = pi
+
+upon receiving <M> from neighbor pj:
+	if (m+1 < dist_i) then
+		dist_i = m+1;
+		parent_i = pj;
+		if (dist_i == k)
+			send <NBR, (num_of_neighbors - 1) > to parent_i
+		send <dist_i> to all neighbors except pj
+
+upon receiving <NBR, num> from neighbor pj:
+	if (parent i != id)
+		send <NBR, num> to parent_i
+	else
+		neighbors[replies] = num_nodes
+		replies++;
+		if (replies == num_of_neighbors)
+			return true if all elements in the neighbors vector are
+			the same
+\end{lstlisting}
+
+\paragraph{Message Complextity:} $O(m*n)$, where m is the number of
+messages send to the all nodes (n).
+
+\paragraph{Time Complextity:} $O(d)$, where $\textbf{d}$ is the
+diameter of the graph, the length of the longest of the shortest path
+between any two vertices. 
+
+\section*{Exercise 2(iii)}
+
+\begin{lstlisting}[style=mycode]
+Code for process p_i
+Initially, 
+
+var count = 0;
+var map<phase, num> = 0; // Keep a map that use phase as key and value
+						 // the number of nodes in each k neighbor
+
+if (p_i == p_r)
+	parent_i = nill
+	replies = 0;
+	phase = 0;
+else
+	dist_i = \inf{}
+
+upon receiving no message:
+	if (pi == pr) and (parent_i == null) then
+		send <SEARCH> to all neighbors;
+		parent_i = pi
+
+upon receiving <SEARCH> from neighbor pj:
+	if (parent_i == NULL)
+		parent_i = pj;
+		send <ACK, 1> to pj
+	else if (parent_i == pj)
+			send <SEARCH> to all children except pj
+	else if 
+			send <NACK> to pj
+
+upon receiving <ACK, num> from neighbor pj:
+	replies ++
+	count += num
+
+	if pj not in the childrens set:
+		add pj to childrens
+
+	if (parent_i == pi)
+		if (replies == num_of_neighbors)
+			replies = 0;
+			phase ++
+			map = <phase, count>
+			count = 0;
+			send <SEARCH> to all children
+	else
+		if (replies == num_of_neighbors - 1) // except parent
+			replies = 0;
+			send <ACK, count> to pj
+			count = 0
+
+upon receiving <NACK> from neighbor pj
+	replies ++
+
+\end{lstlisting}

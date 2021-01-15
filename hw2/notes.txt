@@ -183,8 +183,8 @@ every leaf node:
 
 upon receiving <ELECT, UID, COUNT> message from neighbor pj:
 	nodes += COUNT;
-	if (replies == num_leafs)
-		start from pj to send<ELECT, UID, COUNT> to remaining neighbors
+	if (replies == (num_of_neighbors -1))
+		start from pj to send<ELECT, UID, COUNT + 1> to remaining neighbors
 		terminate
 
 	if (replies == num_of_neighbors)
@@ -192,8 +192,10 @@ upon receiving <ELECT, UID, COUNT> message from neighbor pj:
 			return nodes + 1;
 			terminate
 
-Message Complexity: n messages
-Time Complexity: O (n(l+d))
+Message Complexity: O(n - 1) messages -> n komboi
+Time Complexity: O (d) o arithmos twn komvwn pou tha diasxisei
+sto megalitero monopati opou vrisketai o leader komvos
+
 
 Present event-driven pseudo-code that checks whether all nodes at
 distance k from a distinct node pr have the same number of neighbors.
@@ -237,8 +239,9 @@ upon receiving <NBR, num> from neighbor pj:
 			return true if all elements in the neighbors vector are
 			the same
 
-Message Complextity: O(m*n)
-Time Complextity: O(diam)
+Message Complextity: O(m*n) opou 
+Time Complextity: O(diam) opou diam o komvos pou vrisketai sto
+megalitero monopati
 
 
 Present event-driven pseudo-code that does the following: For all k, 1
@@ -341,5 +344,5 @@ upon receiving <M, value, phaseId, counter> from left
 	else
 		send (M, value, phaseId, counter) to right
 
-Message complexity: O(n^2)
+Message complexity: O(n^2) -> epeidi oloi oi komvoi proothoun minamata pros ta deksia
 Time complexity: O(n)
