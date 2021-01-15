@@ -1,0 +1,29 @@
+Stracture Presentation
+
+Problem + Motivation   (1 slide)
+
+Challenge (2 slides)
+
+Contribution  (1 slide)
+
+Advance compared with Related Work (1 slide)
+
+6 diafaneis eisagwgi
+
+2nd Part - epikentrwthou sto algorithmiko kommati
+Technical Contribution of the Paper
+How the algorithm works
+Bad scenarios
+Na katalavoume kala to sistima kai tis idees
+Paradeigmata ektelesewn 
+amimation
+
+12 diafaneies
+
+Experimental Results
+1-2 diafaneies.
+
+Conclusions
+2 diafanies
+
+Erwtiseis pros to koino!
